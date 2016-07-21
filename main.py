@@ -2,9 +2,12 @@
 
 from io_control import IoControl
 from parser import Parser
+from util import Signal
 
 def main():
     loggined = False
+
+    Signal().set_signal()
 
     io = IoControl()
     io.print_hello_message()

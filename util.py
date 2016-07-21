@@ -1,3 +1,4 @@
+import signal
 
 class _Singleton(type):
 
@@ -9,3 +10,13 @@ class _Singleton(type):
         return cls._instances[cls]
 
 class Singleton(_Singleton('Singleton', (object,), {})): pass
+
+
+class Signal(Singleton):
+
+    def empty_signal_handler(self, signal, frame):
+        return
+
+    def set_signal(self):
+        signal.signal(signal.SIGINT, self.empty_signal_handler)
+        signal.signal(signal.SIGTSTP, self.empty_signal_handler)

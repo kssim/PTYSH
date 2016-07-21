@@ -11,8 +11,7 @@ def main():
 
     while True:
         io.set_prompt(loggined)
-        Parser().command_parser(io.get_input_command())
-
+        Parser().parse_command_line(io.get_input_command())
 
 
 if __name__ == '__main__':

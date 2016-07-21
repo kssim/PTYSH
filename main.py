@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from io_control import IoControl
+from ptysh_base import IoControl
 from parser import Parser
-from util import Signal
+from ptysh_util import Signal
 
 def main():
     loggined = False

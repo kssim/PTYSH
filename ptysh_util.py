@@ -1,4 +1,5 @@
 import signal
+import hashlib
 
 class _Singleton(type):
 
@@ -20,3 +21,15 @@ class Signal(Singleton):
     def set_signal(self):
         signal.signal(signal.SIGINT, self.empty_signal_handler)
         signal.signal(signal.SIGTSTP, self.empty_signal_handler)
+
+
+class Encryption(object):
+
+    _salt = 'IPOT_PTYSH'
+    _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # ptysh
+
+    def encrypt_passwd(self, passwd):
+        return hashlib.sha256(self._salt.encode() + passwd.encode()).hexdigest()
+
+    def validate_passwd(self, passwd):
+        return True if self._default_passwd == self.encrypt_passwd(passwd) else False

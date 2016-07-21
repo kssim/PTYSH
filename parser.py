@@ -1,4 +1,5 @@
-from util import Singleton
+from ptysh_util import Singleton
+from ptysh_base import BasicCommand
 
 class Parser(Singleton):
 
@@ -16,27 +17,3 @@ class Parser(Singleton):
             return
 
         print command
-
-class BasicCommand(object):
-
-    _basic_command = [['list', 'command list', None],
-                      ['exit', 'exit', None]]
-
-    def __init__(self):
-        self._basic_command[0][2] = self.cmd_list
-        self._basic_command[1][2] = self.cmd_exit
-
-    def get_cmd_function(self, command):
-        for cmd in self._basic_command:
-            if command.strip() == cmd[0].strip():
-                return cmd[2]
-
-        return None
-
-    def cmd_list(self):
-        for cmd in self._basic_command:
-            print ('%s\t\t%s' % (cmd[0], cmd[1]))
-
-    def cmd_exit(self):
-        print ('Prgram exit')
-        exit(0)

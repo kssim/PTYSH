@@ -33,3 +33,14 @@ class Encryption(object):
 
     def validate_passwd(self, passwd):
         return True if self._default_passwd == self.encrypt_passwd(passwd) else False
+
+
+class Login(Singleton):
+
+    _login_state = False
+
+    def get_login_state(self):
+        return self._login_state
+
+    def set_login_state(self, state):
+        self._login_state = state

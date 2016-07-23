@@ -3,6 +3,7 @@ from sys import stdout
 from os import path
 from getpass import getpass
 from ptysh_util import Encryption
+from ptysh_util import Login
 
 HOST_NAME_FILE_PATH = "/etc/hostname"
 
@@ -16,8 +17,8 @@ class IoControl(object):
     def get_input_command(self):
         return stdin.readline()
 
-    def set_prompt(self, loggined):
-        tt = "#" if loggined == True else ">"
+    def set_prompt(self):
+        tt = "#" if Login().get_login_state() == True else ">"
         stdout.write(self._host_name + tt + " ")
 
     def print_hello_message(self):
@@ -56,8 +57,10 @@ class BasicCommand(object):
 
         en = Encryption()
         if en.validate_passwd(passwd) == True:
+            Login().set_login_state(True)
             print ('enabled')
         else:
+            Login().set_login_state(False)
             print ('disabled')
 
 

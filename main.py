@@ -5,15 +5,13 @@ from parser import Parser
 from ptysh_util import Signal
 
 def main():
-    loggined = False
-
     Signal().set_signal()
 
     io = IoControl()
     io.print_hello_message()
 
     while True:
-        io.set_prompt(loggined)
+        io.set_prompt()
         Parser().parse_command_line(io.get_input_command())
 
 

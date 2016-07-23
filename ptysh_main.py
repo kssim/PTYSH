@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from ptysh_base import IoControl
-from parser import Parser
+from ptysh_parser import Parser
 from ptysh_util import Signal
 
 def main():

@@ -15,7 +15,7 @@ class Singleton(_Singleton('Singleton', (object,), {})): pass
 
 class Signal(Singleton):
 
-    def empty_signal_handler(self, signal, frame):
+    def empty_signal_handler(self, in_signal, in_frame):
         return
 
     def set_signal(self):
@@ -28,11 +28,11 @@ class Encryption(object):
     _salt = 'IPOT_PTYSH'
     _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # ptysh
 
-    def encrypt_passwd(self, passwd):
-        return hashlib.sha256(self._salt.encode() + passwd.encode()).hexdigest()
+    def encrypt_passwd(self, in_passwd):
+        return hashlib.sha256(self._salt.encode() + in_passwd.encode()).hexdigest()
 
-    def validate_passwd(self, passwd):
-        return True if self._default_passwd == self.encrypt_passwd(passwd) else False
+    def validate_passwd(self, in_passwd):
+        return True if self._default_passwd == self.encrypt_passwd(in_passwd) else False
 
 
 class Login(Singleton):
@@ -42,5 +42,5 @@ class Login(Singleton):
     def get_login_state(self):
         return self._login_state
 
-    def set_login_state(self, state):
-        self._login_state = state
+    def set_login_state(self, in_state):
+        self._login_state = in_state

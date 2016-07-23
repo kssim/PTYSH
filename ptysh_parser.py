@@ -7,6 +7,9 @@ class Parser(Singleton):
         return
 
     def parse_command_line(self, in_cmd):
+        if len(in_cmd) == 1:
+            return
+
         parse_result = BasicCommand().run_command(in_cmd.split(' '))
 
         if parse_result == False:

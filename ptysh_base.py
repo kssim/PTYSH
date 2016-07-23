@@ -8,6 +8,7 @@ from ptysh_util import Login
 
 HOST_NAME_FILE_PATH = '/etc/hostname'
 COMMAND_LIST_CMD_IDX = 0
+COMMAND_LIST_SHOW_CMD_IDX = 1
 COMMAND_LIST_DOC_IDX = 1
 COMMAND_LIST_FUNC_IDX = 2
 
@@ -48,10 +49,13 @@ class BasicCommand(Singleton):
                               ['exit', 'exit', self.cmd_exit]]
 
     def run_command(self, in_cmd):
-        if in_cmd[0].strip() == 'show':
-            command = in_cmd[0].strip() + ' ' + in_cmd[1].strip()
+        if in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'show':
+            if len(in_cmd) == 1:
+                return False
+
+            command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_SHOW_CMD_IDX].strip()
         else:
-            command = in_cmd[0].strip()
+            command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
 
 
         for cmd in self._basic_command:
@@ -62,8 +66,34 @@ class BasicCommand(Singleton):
 
         return False
 
-    def add_private_command(self):
-        self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname])
+    def get_command_index(self, keyword):
+        for idx, cmd in enumerate(self._basic_command):
+            if keyword in cmd:
+                return idx
+
+        return -1
+
+    def switch_mode(self):
+        if Login().get_login_state() == True:
+            idx = self.get_command_index('en')
+            command = ['di', 'disable mode', self.cmd_di]
+            self.add_login_user_cmd()
+        else:
+            idx = self.get_command_index('di')
+            command = ['en', 'enable mode', self.cmd_en]
+            self.del_login_user_cmd()
+
+        self._basic_command.pop(idx)
+        self._basic_command.insert(0, command)
+
+
+    def add_login_user_cmd(self):
+        if self.get_command_index('show hostname') == -1:
+            self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname])
+
+    def del_login_user_cmd(self):
+        idx = self.get_command_index('show hostname')
+        self._basic_command.pop(idx)
 
 
     ##### cmd function. #####
@@ -77,8 +107,13 @@ class BasicCommand(Singleton):
             return
 
         Login().set_login_state(True)
-        self.add_private_command()
+        self.switch_mode()
         print ('Enable mode has been activated.')
+
+    def cmd_di(self):
+        Login().set_login_state(False)
+        self.switch_mode()
+        print ('Enable mode has been deactivated.')
 
     def cmd_list(self):
         for cmd in self._basic_command:

@@ -1,6 +1,7 @@
 from sys import stdin
 from sys import stdout
 from os import path
+from subprocess import call
 from getpass import getpass
 from ptysh_util import Encryption
 from ptysh_util import Singleton
@@ -11,6 +12,7 @@ COMMAND_LIST_CMD_IDX = 0
 COMMAND_LIST_SHOW_CMD_IDX = 1
 COMMAND_LIST_DOC_IDX = 1
 COMMAND_LIST_FUNC_IDX = 2
+COMMAND_LIST_HIDDEN_IDX = 3
 
 class IoControl(object):
 
@@ -44,9 +46,10 @@ class BasicCommand(Singleton):
     _basic_command = []
 
     def __init__(self):
-        self._basic_command = [['en', 'enable mode', self.cmd_en],
-                              ['list', 'command list', self.cmd_list],
-                              ['exit', 'exit', self.cmd_exit]]
+        self._basic_command = [['en', 'enable mode', self.cmd_en, False],
+                              ['list', 'command list', self.cmd_list, False],
+                              ['st', 'start shell', self.cmd_st, True],
+                              ['exit', 'exit', self.cmd_exit, False]]
 
     def run_command(self, in_cmd):
         if in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'show':
@@ -76,11 +79,11 @@ class BasicCommand(Singleton):
     def switch_mode(self):
         if Login().get_login_state() == True:
             idx = self.get_command_index('en')
-            command = ['di', 'disable mode', self.cmd_di]
+            command = ['di', 'disable mode', self.cmd_di, False]
             self.add_login_user_cmd()
         else:
             idx = self.get_command_index('di')
-            command = ['en', 'enable mode', self.cmd_en]
+            command = ['en', 'enable mode', self.cmd_en, False]
             self.del_login_user_cmd()
 
         self._basic_command.pop(idx)
@@ -89,7 +92,7 @@ class BasicCommand(Singleton):
 
     def add_login_user_cmd(self):
         if self.get_command_index('show hostname') == -1:
-            self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname])
+            self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname, False])
 
     def del_login_user_cmd(self):
         idx = self.get_command_index('show hostname')
@@ -115,8 +118,22 @@ class BasicCommand(Singleton):
         self.switch_mode()
         print ('Enable mode has been deactivated.')
 
+    def cmd_st(self):
+        passwd = getpass('passwd: ')
+
+        en = Encryption()
+        if en.validate_passwd(passwd) == False:
+            print ('Fail to enter the shell.')
+            return
+
+        print ('Enter the user shell.')
+        call('/bin/bash')
+
     def cmd_list(self):
         for cmd in self._basic_command:
+            if cmd[COMMAND_LIST_HIDDEN_IDX] == True:
+                continue
+
             print ('%s\t\t%s' % (cmd[COMMAND_LIST_CMD_IDX], cmd[COMMAND_LIST_DOC_IDX]))
 
     def cmd_exit(self):

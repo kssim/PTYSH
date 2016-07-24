@@ -1,44 +1,29 @@
-from sys import stdin
-from sys import stdout
-from os import path
 from subprocess import call
 from getpass import getpass
 from ptysh_util import Encryption
+from ptysh_util import IoControl
 from ptysh_util import Singleton
 from ptysh_util import Login
 
-HOST_NAME_FILE_PATH = '/etc/hostname'
 COMMAND_LIST_CMD_IDX = 0
 COMMAND_LIST_SHOW_CMD_IDX = 1
 COMMAND_LIST_DOC_IDX = 1
 COMMAND_LIST_FUNC_IDX = 2
 COMMAND_LIST_HIDDEN_IDX = 3
 
-class IoControl(object):
-
-    _host_name = ''
+class Parser(Singleton):
 
     def __init__(self):
-        self._host_name = self.get_host_name()
+        return
 
-    def get_input_command(self):
-        return stdin.readline()
+    def parse_command_line(self, in_cmd):
+        if len(in_cmd) == 1:
+            return
 
-    def set_prompt(self):
-        tt = '#' if Login().get_login_state() == True else '>'
-        stdout.write(self._host_name + tt + ' ')
+        parse_result = BasicCommand().run_command(in_cmd.split(' '))
 
-    def print_hello_message(self):
-        message = 'Hello, This is Python Teletype Shell.\n'
-        message += 'COPYRIGHT 2016 IPOT. ALL RIGHTS RESERVED.\n\n'
-        stdout.write(message)
-
-    def get_host_name(self):
-        if path.exists(HOST_NAME_FILE_PATH) == False:
-            return 'PTYSH'
-
-        with open(HOST_NAME_FILE_PATH, 'rb') as f:
-            return f.readline().strip()
+        if parse_result == False:
+            print ('Not support command.')
 
 
 class BasicCommand(Singleton):
@@ -46,7 +31,7 @@ class BasicCommand(Singleton):
     _basic_command = []
 
     def __init__(self):
-        self._basic_command = [['en', 'enable mode', self.cmd_en, False],
+        self._basic_command = [['enable', 'enable mode', self.cmd_enable, False],
                               ['list', 'command list', self.cmd_list, False],
                               ['st', 'start shell', self.cmd_st, True],
                               ['exit', 'exit', self.cmd_exit, False]]
@@ -78,12 +63,12 @@ class BasicCommand(Singleton):
 
     def switch_mode(self):
         if Login().get_login_state() == True:
-            idx = self.get_command_index('en')
-            command = ['di', 'disable mode', self.cmd_di, False]
+            idx = self.get_command_index('enable')
+            command = ['disable', 'disable mode', self.cmd_disable, False]
             self.add_login_user_cmd()
         else:
-            idx = self.get_command_index('di')
-            command = ['en', 'enable mode', self.cmd_en, False]
+            idx = self.get_command_index('disable')
+            command = ['enable', 'enable mode', self.cmd_enable, False]
             self.del_login_user_cmd()
 
         self._basic_command.pop(idx)
@@ -100,7 +85,7 @@ class BasicCommand(Singleton):
 
 
     ##### cmd function. #####
-    def cmd_en(self):
+    def cmd_enable(self):
         passwd = getpass('password: ')
 
         en = Encryption()
@@ -113,7 +98,7 @@ class BasicCommand(Singleton):
         self.switch_mode()
         print ('Enable mode has been activated.')
 
-    def cmd_di(self):
+    def cmd_disable(self):
         Login().set_login_state(False)
         self.switch_mode()
         print ('Enable mode has been deactivated.')

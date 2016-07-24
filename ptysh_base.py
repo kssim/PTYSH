@@ -13,17 +13,28 @@ COMMAND_LIST_HIDDEN_IDX = 3
 
 class Parser(Singleton):
 
-    def __init__(self):
-        return
-
     def parse_command_line(self, in_cmd):
-        if len(in_cmd) == 1:
+        if len(in_cmd) == 1:    # Skip input 'enter' key.
             return
 
         parse_result = BasicCommand().run_command(in_cmd.split(' '))
 
         if parse_result == False:
             print ('Not support command.')
+
+
+class Autocompleter(Singleton):
+
+    _cmd_list = []
+
+    def add_cmd(self, cmd):
+        self._cmd_list.append(cmd)
+
+    def del_cmd(self, cmd):
+        self._cmd_list = [x for x in self._cmd_list if x != cmd]
+
+    def get_cmd_list(self):
+        return self._cmd_list
 
 
 class BasicCommand(Singleton):
@@ -35,6 +46,10 @@ class BasicCommand(Singleton):
                               ['list', 'command list', self.cmd_list, False],
                               ['st', 'start shell', self.cmd_st, True],
                               ['exit', 'exit', self.cmd_exit, False]]
+
+        Autocompleter().add_cmd('enable')
+        Autocompleter().add_cmd('list')
+        Autocompleter().add_cmd('exit')
 
     def run_command(self, in_cmd):
         if in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'show':
@@ -65,10 +80,14 @@ class BasicCommand(Singleton):
         if Login().get_login_state() == True:
             idx = self.get_command_index('enable')
             command = ['disable', 'disable mode', self.cmd_disable, False]
+            Autocompleter().add_cmd('disable')
+            Autocompleter().del_cmd('enable')
             self.add_login_user_cmd()
         else:
             idx = self.get_command_index('disable')
             command = ['enable', 'enable mode', self.cmd_enable, False]
+            Autocompleter().add_cmd('enable')
+            Autocompleter().del_cmd('disable')
             self.del_login_user_cmd()
 
         self._basic_command.pop(idx)
@@ -77,11 +96,15 @@ class BasicCommand(Singleton):
 
     def add_login_user_cmd(self):
         if self.get_command_index('show hostname') == -1:
+            Autocompleter().add_cmd('show')
+            Autocompleter().add_cmd('hostname')
             self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname, False])
 
     def del_login_user_cmd(self):
         idx = self.get_command_index('show hostname')
         self._basic_command.pop(idx)
+        Autocompleter().del_cmd('show')
+        Autocompleter().del_cmd('hostname')
 
 
     ##### cmd function. #####

@@ -1,9 +1,7 @@
 import signal
-import hashlib
-from sys import stdin
+from hashlib import sha256
 from sys import stdout
 from os import path
-
 
 HOST_NAME_FILE_PATH = '/etc/hostname'
 
@@ -27,11 +25,11 @@ class IoControl(object):
         self._host_name = self.get_host_name()
 
     def get_input_command(self):
-        return stdin.readline()
+        return raw_input()
 
     def set_prompt(self):
-        tt = '#' if Login().get_login_state() == True else '>'
-        stdout.write(self._host_name + tt + ' ')
+        prompt = '#' if Login().get_login_state() == True else '>'
+        stdout.write(self._host_name + prompt + ' ')
 
     def print_hello_message(self):
         message = 'Hello, This is Python Teletype Shell.\n'
@@ -62,7 +60,7 @@ class Encryption(object):
     _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # ptysh
 
     def encrypt_passwd(self, in_passwd):
-        return hashlib.sha256(self._salt.encode() + in_passwd.encode()).hexdigest()
+        return sha256(self._salt.encode() + in_passwd.encode()).hexdigest()
 
     def validate_passwd(self, in_passwd):
         return True if self._default_passwd == self.encrypt_passwd(in_passwd) else False

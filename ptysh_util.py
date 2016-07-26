@@ -75,3 +75,15 @@ class Login(Singleton):
 
     def set_login_state(self, in_state):
         self._login_state = in_state
+
+
+class DynamicImporter:
+
+    _instance = None
+
+    def __init__(self, in_module_name, in_class_name):
+        module = __import__(in_module_name)
+        self._instance = getattr(module, in_class_name)
+
+    def get_instance(self):
+        return self._instance()

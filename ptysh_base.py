@@ -1,5 +1,9 @@
+import sys
+from os import path
+from os import listdir
 from subprocess import call
 from getpass import getpass
+from ptysh_util import DynamicImporter
 from ptysh_util import Encryption
 from ptysh_util import IoControl
 from ptysh_util import Singleton
@@ -7,6 +11,7 @@ from ptysh_util import Login
 
 COMMAND_LIST_CMD_IDX = 0
 COMMAND_LIST_SHOW_CMD_IDX = 1
+COMMAND_LIST_CONFIGURE_CMD_IDX = 1
 COMMAND_LIST_DOC_IDX = 1
 COMMAND_LIST_FUNC_IDX = 2
 COMMAND_LIST_HIDDEN_IDX = 3
@@ -39,6 +44,7 @@ class Autocompleter(Singleton):
 
 class BasicCommand(Singleton):
 
+    MODULE_PATH = './modules/'
     _basic_command = []
 
     def __init__(self):
@@ -57,6 +63,8 @@ class BasicCommand(Singleton):
                 return False
 
             command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_SHOW_CMD_IDX].strip()
+        elif in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'configure' and in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip() == 'terminal':
+            command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip()
         else:
             command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
 
@@ -100,11 +108,21 @@ class BasicCommand(Singleton):
             Autocompleter().add_cmd('hostname')
             self._basic_command.append(['show hostname', 'show hostname', self.cmd_show_hostname, False])
 
+            Autocompleter().add_cmd('configure')
+            Autocompleter().add_cmd('terminal')
+            self._basic_command.append(['configure terminal', 'configure terminal', self.cmd_configure_terminal, False])
+
     def del_login_user_cmd(self):
         idx = self.get_command_index('show hostname')
         self._basic_command.pop(idx)
         Autocompleter().del_cmd('show')
         Autocompleter().del_cmd('hostname')
+
+        idx = self.get_command_index('configure terminal')
+        self._basic_command.pop(idx)
+        Autocompleter().del_cmd('configure')
+        Autocompleter().del_cmd('terminal')
+
 
 
     ##### cmd function. #####
@@ -151,3 +169,16 @@ class BasicCommand(Singleton):
     def cmd_show_hostname(self):
         io = IoControl()
         print io.get_host_name()
+
+    def cmd_configure_terminal(self):
+        sys.path.append(self.MODULE_PATH)
+        modules_list = listdir(self.MODULE_PATH)
+
+        for module in modules_list:
+            file_name, file_extension = path.splitext(module)
+            if file_extension != '.py':
+                continue
+
+            dynamic_module = DynamicImporter(file_name, file_name)
+            instance = dynamic_module.get_instance()
+            instance.print_test()

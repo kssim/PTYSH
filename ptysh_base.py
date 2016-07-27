@@ -3,11 +3,13 @@ from os import path
 from os import listdir
 from subprocess import call
 from getpass import getpass
-from ptysh_util import DynamicImporter
+from ptysh_util import LoadModule
 from ptysh_util import Encryption
 from ptysh_util import IoControl
 from ptysh_util import Singleton
-from ptysh_util import Login
+from ptysh_util import Status
+
+MODULE_PATH = './modules/'
 
 COMMAND_LIST_CMD_IDX = 0
 COMMAND_LIST_SHOW_CMD_IDX = 1
@@ -44,8 +46,8 @@ class Autocompleter(Singleton):
 
 class BasicCommand(Singleton):
 
-    MODULE_PATH = './modules/'
     _basic_command = []
+    _modules_command = []
 
     def __init__(self):
         self._basic_command = [['enable', 'enable mode', self.cmd_enable, False],
@@ -63,7 +65,13 @@ class BasicCommand(Singleton):
                 return False
 
             command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_SHOW_CMD_IDX].strip()
-        elif in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'configure' and in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip() == 'terminal':
+        elif in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'configure':
+            if len(in_cmd) == 1:
+                return False
+
+            if in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip() != 'terminal':
+                return False
+
             command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip()
         else:
             command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
@@ -85,7 +93,7 @@ class BasicCommand(Singleton):
         return -1
 
     def switch_mode(self):
-        if Login().get_login_state() == True:
+        if Status().get_login_state() == True:
             idx = self.get_command_index('enable')
             command = ['disable', 'disable mode', self.cmd_disable, False]
             Autocompleter().add_cmd('disable')
@@ -100,7 +108,6 @@ class BasicCommand(Singleton):
 
         self._basic_command.pop(idx)
         self._basic_command.insert(0, command)
-
 
     def add_login_user_cmd(self):
         if self.get_command_index('show hostname') == -1:
@@ -131,16 +138,16 @@ class BasicCommand(Singleton):
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            Login().set_login_state(False)
+            Status().set_login_state(False)
             print ('Failed to enable mode activated.')
             return
 
-        Login().set_login_state(True)
+        Status().set_login_state(True)
         self.switch_mode()
         print ('Enable mode has been activated.')
 
     def cmd_disable(self):
-        Login().set_login_state(False)
+        Status().set_login_state(False)
         self.switch_mode()
         print ('Enable mode has been deactivated.')
 
@@ -171,14 +178,28 @@ class BasicCommand(Singleton):
         print io.get_host_name()
 
     def cmd_configure_terminal(self):
-        sys.path.append(self.MODULE_PATH)
-        modules_list = listdir(self.MODULE_PATH)
+        sys.path.append(MODULE_PATH)
+        modules_list = listdir(MODULE_PATH)
 
         for module in modules_list:
             file_name, file_extension = path.splitext(module)
             if file_extension != '.py':
                 continue
 
-            dynamic_module = DynamicImporter(file_name, file_name)
-            instance = dynamic_module.get_instance()
-            instance.print_test()
+            module = LoadModule(file_name, file_name)
+            instance = module.get_instance()
+            if instance == None:
+                continue
+
+            node_name = instance.get_node_name()
+            module_list = instance.get_command_list()
+
+            self._modules_command.append([node_name, module_list])
+
+        if len(self._modules_command) == 0:
+            print ('Not usable modules.')
+            return
+
+        Status().set_configure_terminal_state(True)
+        for module_list in self._modules_command:
+            print module_list[0]

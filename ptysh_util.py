@@ -28,7 +28,7 @@ class IoControl(object):
         return raw_input()
 
     def set_prompt(self):
-        prompt = '#' if Login().get_login_state() == True else '>'
+        prompt = '#' if Status().get_login_state() == True else '>'
         stdout.write(self._host_name + prompt + ' ')
 
     def print_hello_message(self):
@@ -66,9 +66,10 @@ class Encryption(object):
         return True if self._default_passwd == self.encrypt_passwd(in_passwd) else False
 
 
-class Login(Singleton):
+class Status(Singleton):
 
     _login_state = False
+    _configure_terminal_state = False
 
     def get_login_state(self):
         return self._login_state
@@ -76,8 +77,14 @@ class Login(Singleton):
     def set_login_state(self, in_state):
         self._login_state = in_state
 
+    def get_configure_terminal_state(self):
+        return self._configure_terminal_state
 
-class DynamicImporter:
+    def set_configure_terminal_state(self, in_state):
+        self._configure_terminal_state = in_state
+
+
+class LoadModule(object):
 
     _instance = None
 

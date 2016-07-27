@@ -1,8 +1,10 @@
 from sys import path
 path.append('../')
 from ptysh_module import PtyshModule
+from ptysh_util import Singleton
+from ptysh_base import Autocompleter
 
-class test_module(PtyshModule):
+class test_module(PtyshModule, Singleton):
 
     def __init__(self):
         PtyshModule.__init__(self)

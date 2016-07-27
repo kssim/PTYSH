@@ -24,7 +24,8 @@ class Parser(Singleton):
         if len(in_cmd) == 1:    # Skip input 'enter' key.
             return
 
-        parse_result = BasicCommand().run_command(in_cmd.split(' '))
+        parser = ModulesCommand() if Status().get_configure_terminal_state() == True else BasicCommand()
+        parse_result = parser.run_command(in_cmd.split(' '))
 
         if parse_result == False:
             print ('Not support command.')
@@ -47,7 +48,6 @@ class Autocompleter(Singleton):
 class BasicCommand(Singleton):
 
     _basic_command = []
-    _modules_command = []
 
     def __init__(self):
         self._basic_command = [['enable', 'enable mode', self.cmd_enable, False],
@@ -178,6 +178,24 @@ class BasicCommand(Singleton):
         print io.get_host_name()
 
     def cmd_configure_terminal(self):
+        Status().set_configure_terminal_state(True)
+        Autocompleter().del_cmd('configure')
+        Autocompleter().del_cmd('terminal')
+        Autocompleter().del_cmd('disable')
+        Autocompleter().del_cmd('hostname')
+
+
+class ModulesCommand(Singleton):
+
+    _modules_command = []
+    _subnode_modules_command = []
+
+    def __init__(self):
+        self._modules_command = [['list', 'command list', self.cmd_list, False],
+                              ['exit', 'exit', self.cmd_exit, False]]
+        self.init_command()
+
+    def init_command(self):
         sys.path.append(MODULE_PATH)
         modules_list = listdir(MODULE_PATH)
 
@@ -200,6 +218,33 @@ class BasicCommand(Singleton):
             print ('Not usable modules.')
             return
 
-        Status().set_configure_terminal_state(True)
-        for module_list in self._modules_command:
-            print module_list[0]
+    def run_command(self, in_cmd):
+        command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
+
+        cmd_list = self._subnode_modules_command if Status().get_sub_node() == True else self._modules_command
+        for cmd in cmd_list:
+            if command != cmd[COMMAND_LIST_CMD_IDX].strip():
+                continue
+
+            if len(cmd) == 2:                                   # submodules list count (module_name, module_command_list)
+                Status().set_sub_node(True)
+                Status().set_current_node(cmd[0])               # module_name index
+                self._subnode_modules_command = cmd[1]          # modules_command_list index
+            else:
+                cmd_function = cmd[COMMAND_LIST_FUNC_IDX]
+                cmd_function()
+
+            return True
+        return False
+
+    def cmd_list(self):
+        cmd_list = self._subnode_modules_command if Status().get_sub_node() == True else self._modules_command
+        for cmd in self._modules_command:
+            print ('%s' % cmd[COMMAND_LIST_CMD_IDX])
+
+    def cmd_exit(self):
+        Status().set_configure_terminal_state(False)
+        Autocompleter().add_cmd('configure')
+        Autocompleter().add_cmd('terminal')
+        Autocompleter().del_cmd('disable')
+        Autocompleter().del_cmd('hostname')

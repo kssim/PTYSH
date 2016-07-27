@@ -29,7 +29,15 @@ class IoControl(object):
 
     def set_prompt(self):
         prompt = '#' if Status().get_login_state() == True else '>'
-        stdout.write(self._host_name + prompt + ' ')
+
+        if Status().get_sub_node() == True:
+            location = '(%s)' % Status().get_current_node()
+        elif Status().get_configure_terminal_state() == True:
+            location = '(configure terminal)'
+        else:
+            location = ''
+
+        stdout.write(self._host_name + location + prompt + ' ')
 
     def print_hello_message(self):
         message = 'Hello, This is Python Teletype Shell.\n'
@@ -70,6 +78,8 @@ class Status(Singleton):
 
     _login_state = False
     _configure_terminal_state = False
+    _sub_node = False
+    _current_node = ''
 
     def get_login_state(self):
         return self._login_state
@@ -82,6 +92,21 @@ class Status(Singleton):
 
     def set_configure_terminal_state(self, in_state):
         self._configure_terminal_state = in_state
+
+    def get_sub_node(self):
+        return self._sub_node
+
+    def set_sub_node(self, in_state):
+        if in_state == False:
+            self._current_node = ''
+
+        self._sub_node = in_state
+
+    def get_current_node(self):
+        return self._current_node
+
+    def set_current_node(self, in_node_name):
+        self._current_node = in_node_name
 
 
 class LoadModule(object):

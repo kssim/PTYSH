@@ -6,8 +6,8 @@ class PtyshModule(object):
     _command_list = []
 
     def __init__(self):
-        self._command_list = [['exit', 'exit', self.cmd_exit, False],
-                              ['list', 'list', self.cmd_list, False]]
+        self._command_list = [['exit', 'exit', self.cmd_exit, False, True],
+                              ['list', 'command list', self.cmd_list, False, True]]
 
     def get_node_name(self):
         return self._node_name
@@ -18,12 +18,15 @@ class PtyshModule(object):
     def get_command_list(self):
         return self._command_list
 
-    def set_command(self, in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag):
-        self._command_list.append([in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag])
+    def set_command(self, in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working):
+        self._command_list.append([in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working])
 
     def cmd_exit(self):
         Status().set_sub_node(False)
 
     def cmd_list(self):
         for cmd in self._command_list:
-            print ('%s\t\t%s' % (cmd[0], cmd[1]))
+            if cmd[3] == True or cmd[4] == False:
+                continue
+
+            print ('%s%s' % (cmd[0].ljust(30), cmd[1]))

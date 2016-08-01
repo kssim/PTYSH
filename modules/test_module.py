@@ -22,9 +22,12 @@ class test_module(PtyshModule, Singleton):
     def cmd_print_hello_world(self):
         print ('hello world')
 
-    def cmd_send_msg_to_daemon(self):
-        bus = dbus.SystemBus()
-        bus_object = bus.get_object(DBUS_BUS_NAME, DBUS_OBJECT_PATH)
-        bus_interface = dbus.Interface(bus_object, DBUS_BUS_NAME)
+    def cmd_send_msg_to_daemon(self, in_msg):
+        try:
+            bus = dbus.SystemBus()
+            bus_object = bus.get_object(DBUS_BUS_NAME, DBUS_OBJECT_PATH)
+            bus_interface = dbus.Interface(bus_object, DBUS_BUS_NAME)
 
-        bus_interface.receive_signal('Send message is worked.')
+            bus_interface.receive_signal(in_msg)
+        except:
+            print ('The daemon is not loaded.')

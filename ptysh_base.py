@@ -45,6 +45,9 @@ class Autocompleter(Singleton):
     def add_cmd_list(self, in_cmd_list):
         for cmd in in_cmd_list:
             if len(cmd) > 4 and cmd[COMMAND_LIST_WORKING_IDX] == False:
+                # Exception code.
+                # 'configure terminal' modules list has only two cmd items.
+                # So, skip the 'configure terminal' modules list.
                 continue
 
             self._cmd_list.append(cmd[COMMAND_LIST_CMD_IDX])
@@ -226,7 +229,10 @@ class ModulesCommand(Singleton):
                 self._subnode_modules_command = cmd[1]          # modules_command_list index
             else:
                 cmd_function = cmd[COMMAND_LIST_FUNC_IDX]
-                cmd_function()
+                try:
+                    cmd_function(*in_cmd[1:])                   # pass arguments and skip command.
+                except:
+                    print ("This command is not supported.")
 
             return True
         return False

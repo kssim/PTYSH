@@ -1,11 +1,15 @@
 from ptysh_util import Status
 
+PRINT_FORMAT_PADDING = 30
+
 class PtyshModule(object):
 
     _node_name = ''
     _command_list = []
 
     def __init__(self):
+        # command list
+        # - [command, description, function, invisible state, workable state]
         self._command_list = [['exit', 'exit', self.cmd_exit, False, True],
                               ['list', 'command list', self.cmd_list, False, True]]
 
@@ -27,6 +31,7 @@ class PtyshModule(object):
     def cmd_list(self):
         for cmd in self._command_list:
             if cmd[3] == True or cmd[4] == False:
+                # invisible state is true and workable state is false.
                 continue
 
-            print ('%s%s' % (cmd[0].ljust(30), cmd[1]))
+            print ('%s%s' % (cmd[0].ljust(PRINT_FORMAT_PADDING), cmd[1]))   # print command name and description.

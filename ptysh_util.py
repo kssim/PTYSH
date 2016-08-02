@@ -46,7 +46,7 @@ class IoControl(object):
 
     def get_host_name(self):
         if path.exists(HOST_NAME_FILE_PATH) == False:
-            return 'PTYSH'
+            return 'PTYSH'          # default prompt name
 
         with open(HOST_NAME_FILE_PATH, 'rb') as f:
             return f.readline().strip()
@@ -65,7 +65,7 @@ class Signal(Singleton):
 class Encryption(object):
 
     _salt = 'IPOT_PTYSH'
-    _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # ptysh
+    _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # Encrypted string 'ptysh'
 
     def encrypt_passwd(self, in_passwd):
         return sha256(self._salt.encode() + in_passwd.encode()).hexdigest()

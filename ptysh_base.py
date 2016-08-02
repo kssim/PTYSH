@@ -19,6 +19,8 @@ COMMAND_LIST_FUNC_IDX = 2
 COMMAND_LIST_HIDDEN_IDX = 3
 COMMAND_LIST_WORKING_IDX = 4
 
+PRINT_FORMAT_PADDING = 30
+
 class Parser(Singleton):
 
     def parse_command_line(self, in_cmd):
@@ -154,7 +156,7 @@ class BasicCommand(Singleton):
             if cmd[COMMAND_LIST_HIDDEN_IDX] == True or cmd[COMMAND_LIST_WORKING_IDX] == False:
                 continue
 
-            print ('%s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(30), cmd[COMMAND_LIST_DOC_IDX]))
+            print ('%s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING), cmd[COMMAND_LIST_DOC_IDX]))
 
     def cmd_exit(self):
         print ('Prgram exit')
@@ -175,10 +177,12 @@ class ModulesCommand(Singleton):
     _subnode_modules_command = []
 
     def __init__(self):
-        self._modules_command = [['list', 'command list', self.cmd_list, False],
-                              ['exit', 'exit', self.cmd_exit, False]]
-        self.init_command()
-        self.set_autocompleter()
+        self.cmd_refresh()
+
+    def init_basic_command(self):
+        self._modules_command = [['list', 'command list', self.cmd_list, False, True],
+                              ['refresh', 'refresh module list', self.cmd_refresh, False, True],
+                              ['exit', 'exit', self.cmd_exit, False, True]]
 
     def init_command(self):
         sys.path.append(MODULE_PATH)
@@ -189,19 +193,36 @@ class ModulesCommand(Singleton):
             if file_extension != '.py':
                 continue
 
-            module = LoadModule(file_name, file_name)
-            instance = module.get_instance()
-            if instance == None:
+            try:
+                module = LoadModule(file_name, file_name)
+                instance = module.get_instance()
+            except:
+                print ('Your module(\'%s\') has a problem.' % file_name)
+                print ('Please check your module\'s file name and class name.')
                 continue
+            else:
+                if instance == None:
+                    continue
 
-            node_name = instance.get_node_name()
-            module_list = instance.get_command_list()
+                node_name = instance.get_node_name()
+                module_list = instance.get_command_list()
+
+
+            if self.module_cmd_duplicate_check(node_name) == True:
+                print ('\'%s\' module name is duplicated, so this module is not added.' % file_name)
+                continue
 
             self._modules_command.append([node_name, module_list])
 
         if len(self._modules_command) == 0:
             print ('Not usable modules.')
             return
+
+    def module_cmd_duplicate_check(self, key):
+        for module in self._modules_command:
+            if key in module:
+                return True
+        return False
 
     def set_autocompleter(self):
         if Status().get_sub_node() == True:
@@ -237,11 +258,19 @@ class ModulesCommand(Singleton):
             return True
         return False
 
+
+
+    ##### cmd function. #####
     def cmd_list(self):
         cmd_list = self._subnode_modules_command if Status().get_sub_node() == True else self._modules_command
         for cmd in self._modules_command:
-            print ('%s' % cmd[COMMAND_LIST_CMD_IDX].ljust(30))
+            print ('%s' % cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING))
 
     def cmd_exit(self):
         Status().set_configure_terminal_state(False)
+        self.set_autocompleter()
+
+    def cmd_refresh(self):
+        self.init_basic_command()
+        self.init_command()
         self.set_autocompleter()

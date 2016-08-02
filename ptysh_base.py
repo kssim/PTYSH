@@ -159,12 +159,12 @@ class BasicCommand(Singleton):
             print ('%s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING), cmd[COMMAND_LIST_DOC_IDX]))
 
     def cmd_exit(self):
-        print ('Prgram exit')
+        print ('Program exit')
         exit(0)
 
     def cmd_show_hostname(self):
         io = IoControl()
-        print io.get_host_name()
+        print (io.get_host_name())
 
     def cmd_configure_terminal(self):
         Status().set_configure_terminal_state(True)

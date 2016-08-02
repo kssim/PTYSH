@@ -1,6 +1,6 @@
 import signal
+import sys
 from hashlib import sha256
-from sys import stdout
 from os import path
 
 HOST_NAME_FILE_PATH = '/etc/hostname'
@@ -25,7 +25,7 @@ class IoControl(object):
         self._host_name = self.get_host_name()
 
     def get_input_command(self):
-        return raw_input()
+        return input() if sys.version_info >= (3,0) else raw_input()
 
     def set_prompt(self):
         prompt = '#' if Status().get_login_state() == True else '>'
@@ -37,12 +37,13 @@ class IoControl(object):
         else:
             location = ''
 
-        stdout.write(self._host_name + location + prompt + ' ')
+        formatted_prompt = '%s%s%s ' % (self._host_name.decode('utf-8'), location, prompt)
+        sys.stdout.write(formatted_prompt)
 
     def print_hello_message(self):
         message = 'Hello, This is Python Teletype Shell.\n'
         message += 'COPYRIGHT 2016 IPOT. ALL RIGHTS RESERVED.\n\n'
-        stdout.write(message)
+        sys.stdout.write(message)
 
     def get_host_name(self):
         if path.exists(HOST_NAME_FILE_PATH) == False:

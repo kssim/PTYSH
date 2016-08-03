@@ -9,7 +9,7 @@ from ptysh_util import IoControl
 from ptysh_util import Singleton
 from ptysh_util import Status
 
-MODULE_PATH = './modules/'
+MODULE_PATH = path.join(path.abspath(path.dirname(__file__)), 'modules')
 
 COMMAND_LIST_CMD_IDX = 0
 COMMAND_LIST_SHOW_CMD_IDX = 1
@@ -190,7 +190,7 @@ class ModulesCommand(Singleton):
 
         for module in modules_list:
             file_name, file_extension = path.splitext(module)
-            if file_extension != '.py':
+            if file_extension != '.py' or file_name == '__init__':
                 continue
 
             try:

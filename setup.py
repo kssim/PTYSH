@@ -16,6 +16,7 @@ setup(
     packages=['modules', 'daemon_example'],
     install_requires=['python-config', 'dbus-python'],
     py_modules = [
+        'ptysh_main',
         'ptysh_base',
         'ptysh_util',
         'ptysh_module',

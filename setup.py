@@ -12,7 +12,7 @@ except:
 
 setup(
     name='ptysh',
-    version=version,
+    version='0.1.0',
     packages=['modules', 'daemon_example'],
     install_requires=['python-config', 'dbus-python'],
     py_modules = [

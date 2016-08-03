@@ -1,6 +1,5 @@
 import dbus
 from sys import path
-path.append('../')
 from ptysh_module import PtyshModule
 from ptysh_util import Singleton
 

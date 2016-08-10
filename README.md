@@ -1,14 +1,12 @@
 ## PTYSH
 PTYSH is an abbreviation of 'Python Teletype Shell'.<br>
-It was made with reference to the 'zebra vtysh'.<br>
+It was made with reference to the 'zebra vtysh'.
 Vtysh is an integrated shell for Quagga routing software.<br>
-<br>
-Ptysh is not the only route shell, the shell is customizable, so you can normally use.<br>
-It made it possible to add commands to the module for availability.<br>
+Ptysh is not the only route shell, the shell is customizable, so you can general purpose.<br>
 
 
-## Note
-You can install ptysh through the pip.<br>
+## Notice
+You can install PTYSH through the pip.<br>
 However, you must manually install some libraries.<br>
 I'll update the library list soon.<br>
 
@@ -17,19 +15,19 @@ I'll update the library list soon.<br>
 ### Start shell
 When you run the 'ptysh_main.py', the shell begins.<br>
 You can use the commands summarized below.<br>
-During PTYSH to use commands such as ctrl-c and ctrl-z does not work.<br>
+You can't use the command (suchs as Ctrl-Z or Ctrl-C) to use during PTYSH.<br>
 
 
 ### Add custom module
 To add a module, you will create a file with reference to the sample code in the "modules" directory.<br>
-You can create additional logic inherit the class ptysh_module.<br>
+You can create additional logic inherit the class 'ptysh_module'.<br>
 
 
 ## Command
-### disable mode
+### In 'disable mode'
 1. enable
 	* Enter the control shell
-	* It required password. (default password is ptysh)
+	* It is required password. (default password is ptysh)
 2. exit
 	* exit the shell.
 3. list
@@ -37,10 +35,10 @@ You can create additional logic inherit the class ptysh_module.<br>
 4. st
 	* start-shell (default shell is bash)
 	* It is hidden command.
-	* It required password and it is same to enable password.
+	* It is required password and it is same to enable password.
 
 
-### enable mode
+### In 'enable mode'
 1. diable
 	* exit the enable mode
 2. exit
@@ -50,11 +48,22 @@ You can create additional logic inherit the class ptysh_module.<br>
 4. configure terminal
 	* It is control menu for other modules.
 
-### configure terminal mode
+
+### In 'configure terminal mode'
 1. exit
 	* exit the shell.
 2. list
 	* show command list.
+3. [Modules list]
+	* show modules name list
+
+
+## Plan
+1. Fix the pip install configuration problem(libraries).
+2. Internal logic refactoring for scalability.
+3. Improved stability in various environments.
+4. Create wiki page and fix the readme file.
+
 
 
 ## Idea or Issue

@@ -28,11 +28,11 @@ class IoControl(object):
         return input() if sys.version_info >= (3,0) else raw_input()
 
     def set_prompt(self):
-        prompt = '#' if Status().get_login_state() == True else '>'
+        prompt = '#' if Status().login_state == True else '>'
 
-        if Status().get_sub_node() == True:
-            location = '(%s)' % Status().get_current_node()
-        elif Status().get_configure_terminal_state() == True:
+        if Status().sub_node == True:
+            location = '(%s)' % Status().current_node
+        elif Status().configure_terminal_state == True:
             location = '(configure terminal)'
         else:
             location = ''
@@ -82,31 +82,39 @@ class Status(Singleton):
     _sub_node = False
     _current_node = ''
 
-    def get_login_state(self):
+    @property
+    def login_state(self):
         return self._login_state
 
-    def set_login_state(self, in_state):
+    @login_state.setter
+    def login_state(self, in_state):
         self._login_state = in_state
 
-    def get_configure_terminal_state(self):
+    @property
+    def configure_terminal_state(self):
         return self._configure_terminal_state
 
-    def set_configure_terminal_state(self, in_state):
+    @configure_terminal_state.setter
+    def configure_terminal_state(self, in_state):
         self._configure_terminal_state = in_state
 
-    def get_sub_node(self):
+    @property
+    def sub_node(self):
         return self._sub_node
 
-    def set_sub_node(self, in_state):
+    @sub_node.setter
+    def sub_node(self, in_state):
         if in_state == False:
             self._current_node = ''
 
         self._sub_node = in_state
 
-    def get_current_node(self):
+    @property
+    def current_node(self):
         return self._current_node
 
-    def set_current_node(self, in_node_name):
+    @current_node.setter
+    def current_node(self, in_node_name):
         self._current_node = in_node_name
 
 
@@ -118,5 +126,6 @@ class LoadModule(object):
         module = __import__(in_module_name)
         self._instance = getattr(module, in_class_name)
 
-    def get_instance(self):
+    @property
+    def instance(self):
         return self._instance()

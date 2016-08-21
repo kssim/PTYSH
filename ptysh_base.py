@@ -27,7 +27,7 @@ class Parser(Singleton):
         if len(in_cmd) == 0:    # Skip input 'enter' key.
             return
 
-        parser = ModulesCommand() if Status().get_configure_terminal_state() == True else BasicCommand()
+        parser = ModulesCommand() if Status().configure_terminal_state == True else BasicCommand()
         parse_result = parser.run_command(in_cmd.split(' '))
 
         if parse_result == False:
@@ -74,7 +74,7 @@ class BasicCommand(Singleton):
         Autocompleter().add_cmd_list(self._basic_command)
 
     def set_autocompleter(self):
-        if Status().get_configure_terminal_state() == True:
+        if Status().configure_terminal_state == True:
             return
 
         Autocompleter().add_cmd_list(self._basic_command)
@@ -111,7 +111,7 @@ class BasicCommand(Singleton):
                 cmd[COMMAND_LIST_WORKING_IDX] = in_working_state
 
     def switch_login_mode(self):
-        logined = Status().get_login_state()
+        logined = Status().login_state
         self.switch_cmd_working_state('disable', logined)
         self.switch_cmd_working_state('show hostname', logined)
         self.switch_cmd_working_state('configure terminal', logined)
@@ -127,16 +127,16 @@ class BasicCommand(Singleton):
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            Status().set_login_state(False)
+            Status().login_state = False
             print ('Failed to enable mode activated.')
             return
 
-        Status().set_login_state(True)
+        Status().login_state = True
         self.switch_login_mode()
         print ('Enable mode has been activated.')
 
     def cmd_disable(self):
-        Status().set_login_state(False)
+        Status().login_state = False
         self.switch_login_mode()
         print ('Enable mode has been deactivated.')
 
@@ -167,7 +167,7 @@ class BasicCommand(Singleton):
         print (io.get_host_name())
 
     def cmd_configure_terminal(self):
-        Status().set_configure_terminal_state(True)
+        Status().configure_terminal_state = True
         Autocompleter().del_cmd_list(self._basic_command)
 
 
@@ -195,7 +195,7 @@ class ModulesCommand(Singleton):
 
             try:
                 module = LoadModule(file_name, file_name)
-                instance = module.get_instance()
+                instance = module.instance
             except:
                 print ('Your module(\'%s\') has a problem.' % file_name)
                 print ('Please check your module\'s file name and class name.')
@@ -225,12 +225,12 @@ class ModulesCommand(Singleton):
         return False
 
     def set_autocompleter(self):
-        if Status().get_sub_node() == True:
+        if Status().sub_node == True:
             Autocompleter().add_cmd_list(self._subnode_modules_command)
         else:
             Autocompleter().del_cmd_list(self._subnode_modules_command)
 
-        if Status().get_configure_terminal_state() == True:
+        if Status().configure_terminal_state == True:
             Autocompleter().add_cmd_list(self._modules_command)
         else:
             Autocompleter().del_cmd_list(self._modules_command)
@@ -239,14 +239,14 @@ class ModulesCommand(Singleton):
     def run_command(self, in_cmd):
         command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
 
-        cmd_list = self._subnode_modules_command if Status().get_sub_node() == True else self._modules_command
+        cmd_list = self._subnode_modules_command if Status().sub_node == True else self._modules_command
         for cmd in cmd_list:
             if command != cmd[COMMAND_LIST_CMD_IDX].strip():
                 continue
 
             if len(cmd) == 2:                                   # submodules list count (module_name, module_command_list)
-                Status().set_sub_node(True)
-                Status().set_current_node(cmd[0])               # module_name index
+                Status().sub_node = True
+                Status().current_node = cmd[0]                  # module_name index
                 self._subnode_modules_command = cmd[1]          # modules_command_list index
             else:
                 cmd_function = cmd[COMMAND_LIST_FUNC_IDX]
@@ -262,12 +262,12 @@ class ModulesCommand(Singleton):
 
     ##### cmd function. #####
     def cmd_list(self):
-        cmd_list = self._subnode_modules_command if Status().get_sub_node() == True else self._modules_command
+        cmd_list = self._subnode_modules_command if Status().sub_node == True else self._modules_command
         for cmd in self._modules_command:
             print ('%s' % cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING))
 
     def cmd_exit(self):
-        Status().set_configure_terminal_state(False)
+        Status().configure_terminal_state = False
         self.set_autocompleter()
 
     def cmd_refresh(self):

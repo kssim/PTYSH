@@ -26,7 +26,7 @@ class PtyshModule(object):
         self._command_list.append([in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working])
 
     def cmd_exit(self):
-        Status().set_sub_node(False)
+        Status().sub_node = False
 
     def cmd_list(self):
         for cmd in self._command_list:

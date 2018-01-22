@@ -28,11 +28,11 @@ class IoControl(object):
         return input() if sys.version_info >= (3,0) else raw_input()
 
     def set_prompt(self):
-        prompt = '#' if Status().login_state == True else '>'
+        prompt = '#' if getattr(Status(), "login") == True else '>'
 
         if Status().sub_node == True:
             location = '(%s)' % Status().current_node
-        elif Status().configure_terminal_state == True:
+        elif getattr(Status(), "configure") == True:
             location = '(configure terminal)'
         else:
             location = ''
@@ -42,7 +42,7 @@ class IoControl(object):
 
     def print_hello_message(self):
         message = 'Hello, This is Python Teletype Shell.\n'
-        message += 'COPYRIGHT 2016 IPOT. ALL RIGHTS RESERVED.\n\n'
+        message += 'COPYRIGHT 2017 KyeongSeob Sim. ALL RIGHTS RESERVED.\n\n'
         sys.stdout.write(message)
 
     def get_host_name(self):
@@ -77,26 +77,16 @@ class Encryption(object):
 
 class Status(Singleton):
 
-    _login_state = False
-    _configure_terminal_state = False
-    _sub_node = False
-    _current_node = ''
+    __attrs__ = [
+        "configure", "login"
+    ]
 
-    @property
-    def login_state(self):
-        return self._login_state
+    def __init__(self):
+        self.configure = False
+        self.login = False
 
-    @login_state.setter
-    def login_state(self, in_state):
-        self._login_state = in_state
-
-    @property
-    def configure_terminal_state(self):
-        return self._configure_terminal_state
-
-    @configure_terminal_state.setter
-    def configure_terminal_state(self, in_state):
-        self._configure_terminal_state = in_state
+        self._sub_node = False
+        self._current_node = ''
 
     @property
     def sub_node(self):

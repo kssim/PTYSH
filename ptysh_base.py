@@ -27,7 +27,7 @@ class Parser(Singleton):
         if len(in_cmd) == 0:    # Skip input 'enter' key.
             return
 
-        parser = ModulesCommand() if Status().configure_terminal_state == True else BasicCommand()
+        parser = ModulesCommand() if getattr(Status(), "configure") == True else BasicCommand()
         parse_result = parser.run_command(in_cmd.split(' '))
 
         if parse_result == False:
@@ -74,7 +74,7 @@ class BasicCommand(Singleton):
         Autocompleter().add_cmd_list(self._basic_command)
 
     def set_autocompleter(self):
-        if Status().configure_terminal_state == True:
+        if getattr(Status(), "configure") == True:
             return
 
         Autocompleter().add_cmd_list(self._basic_command)
@@ -111,7 +111,7 @@ class BasicCommand(Singleton):
                 cmd[COMMAND_LIST_WORKING_IDX] = in_working_state
 
     def switch_login_mode(self):
-        logined = Status().login_state
+        logined = getattr(Status(), "login")
         self.switch_cmd_working_state('disable', logined)
         self.switch_cmd_working_state('show hostname', logined)
         self.switch_cmd_working_state('configure terminal', logined)
@@ -127,16 +127,16 @@ class BasicCommand(Singleton):
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            Status().login_state = False
+            setattr(Status(), "login", False)
             print ('Failed to enable mode activated.')
             return
 
-        Status().login_state = True
+        setattr(Status(), "login", True)
         self.switch_login_mode()
         print ('Enable mode has been activated.')
 
     def cmd_disable(self):
-        Status().login_state = False
+        setattr(Status(), "login", False)
         self.switch_login_mode()
         print ('Enable mode has been deactivated.')
 
@@ -156,7 +156,7 @@ class BasicCommand(Singleton):
             if cmd[COMMAND_LIST_HIDDEN_IDX] == True or cmd[COMMAND_LIST_WORKING_IDX] == False:
                 continue
 
-            print ('%s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING), cmd[COMMAND_LIST_DOC_IDX]))
+            print ('  %s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING), cmd[COMMAND_LIST_DOC_IDX]))
 
     def cmd_exit(self):
         print ('Program exit')
@@ -167,7 +167,7 @@ class BasicCommand(Singleton):
         print (io.get_host_name())
 
     def cmd_configure_terminal(self):
-        Status().configure_terminal_state = True
+        setattr(Status(), "configure", True)
         Autocompleter().del_cmd_list(self._basic_command)
 
 
@@ -230,7 +230,7 @@ class ModulesCommand(Singleton):
         else:
             Autocompleter().del_cmd_list(self._subnode_modules_command)
 
-        if Status().configure_terminal_state == True:
+        if getattr(Status(), "configure") == True:
             Autocompleter().add_cmd_list(self._modules_command)
         else:
             Autocompleter().del_cmd_list(self._modules_command)
@@ -264,10 +264,10 @@ class ModulesCommand(Singleton):
     def cmd_list(self):
         cmd_list = self._subnode_modules_command if Status().sub_node == True else self._modules_command
         for cmd in self._modules_command:
-            print ('%s' % cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING))
+            print ('  %s' % cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING))
 
     def cmd_exit(self):
-        Status().configure_terminal_state = False
+        setattr(Status(), "configure", False)
         self.set_autocompleter()
 
     def cmd_refresh(self):

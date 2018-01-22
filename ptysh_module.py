@@ -1,6 +1,6 @@
 from ptysh_util import Status
 
-PRINT_FORMAT_PADDING = 30
+PRINT_FORMAT_LEFT_PADDING   = 30
 
 class PtyshModule(object):
 
@@ -34,4 +34,4 @@ class PtyshModule(object):
                 # invisible state is true and workable state is false.
                 continue
 
-            print ('%s%s' % (cmd[0].ljust(PRINT_FORMAT_PADDING), cmd[1]))   # print command name and description.
+            print ('%s%s' % (cmd[0].ljust(PRINT_FORMAT_LEFT_PADDING), cmd[1]))   # print command name and description.

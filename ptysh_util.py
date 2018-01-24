@@ -41,7 +41,7 @@ class IoControl(object):
     def get_prompt_msg(self):
         prompt = "#" if Status().login else ">"
 
-        if Status().module:
+        if Status().module_depth > Status().ZERO_DEPTH:
             location = "(%s)" % Status().current_node
         elif Status().configure:
             location = "(configure terminal)"
@@ -76,10 +76,12 @@ class Encryption(object):
 
 class Status(Singleton):
 
+    ZERO_DEPTH = 0
+
     def __init__(self):
         self._login = False
         self._configure = False
-        self._module = False
+        self._module_depth = self.ZERO_DEPTH
         self._current_node = ""
 
     @property
@@ -99,15 +101,14 @@ class Status(Singleton):
         self._configure = state
 
     @property
-    def module(self):
-        return self._module
+    def module_depth(self):
+        return self._module_depth
 
-    @module.setter
-    def module(self, state):
-        if not state:
-            self._current_node = ""
+    def increase_module_depth(self):
+        self._module_depth += 1
 
-        self._module = state
+    def decrease_module_depth(self):
+        self._module_depth -= 1
 
     @property
     def current_node(self):

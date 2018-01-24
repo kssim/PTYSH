@@ -21,7 +21,7 @@ class Parser(Singleton):
         Find the result by dividing the input value and command by spaces and comparing them.
         """
         if ModuleNode().get_module_instance(user_input) is not None:
-            Status().module = True
+            Status().increase_module_depth()
             Status().current_node = user_input
             return
 
@@ -55,11 +55,11 @@ class Parser(Singleton):
         """
         Get the command set for the current node position.
         """
-        if not Status().configure:                          # base node
+        if not Status().configure:                              # base node
             return BasicNode().command_set
-        elif Status().configure and not Status().module:    # configure node
+        elif Status().module_depth == Status().ZERO_DEPTH :      # configure node
             return ModuleNode().command_set
-        else:                                               # module node
+        else:                                                   # module node
             instance = ModuleNode().get_module_instance(Status().current_node)
             return instance.command_set
 
@@ -121,7 +121,7 @@ class ModuleCommand(object):
                 print ("  %s" % command.command.ljust(PRINT_FORMAT_PADDING))
 
     def cmd_exit(self):
-        Status().module = False
+        Status().decrease_module_depth()
 
 
 

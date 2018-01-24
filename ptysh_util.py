@@ -38,8 +38,6 @@ class IoControl(object):
 
         if Status().module_depth > Status().ZERO_DEPTH:
             location = "(%s)" % Status().current_node
-        elif Status().configure:
-            location = "(configure terminal)"
         else:
             location = ""
 
@@ -82,10 +80,10 @@ class Encryption(object):
 class Status(Singleton):
 
     ZERO_DEPTH = 0
+    CONF_DEPTH = 1
 
     def __init__(self):
         self._login = False
-        self._configure = False
         self._module_depth = self.ZERO_DEPTH
         self._current_node = []
 
@@ -96,14 +94,6 @@ class Status(Singleton):
     @login.setter
     def login(self, state):
         self._login = state
-
-    @property
-    def configure(self):
-        return self._configure
-
-    @configure.setter
-    def configure(self, state):
-        self._configure = state
 
     @property
     def module_depth(self):

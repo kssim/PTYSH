@@ -19,7 +19,7 @@ class Parser(Singleton):
         Compares the user's input with the stored command set and finds the command to process.
         Find the result by dividing the input value and command by spaces and comparing them.
         """
-        if Status().current_node != user_input and ModuleNode().get_module_instance(user_input) is not None:
+        if Status().current_node != user_input and BasicNode().get_module_instance(user_input) is not None:
             Status().increase_module_depth()
             Status().push_current_node(user_input)
             return
@@ -55,12 +55,12 @@ class Parser(Singleton):
         """
         Get the command set for the current node position.
         """
-        if not Status().configure:                              # base node
+        if Status().module_depth == Status().ZERO_DEPTH:        # base node
             return BasicNode().command_set
-        elif Status().module_depth == Status().ZERO_DEPTH :      # configure node
-            return ModuleNode().command_set
+        elif Status().module_depth == Status().CONF_DEPTH:      # configure node
+            return BasicNode().configure_terminal.command_set
         else:                                                   # module node
-            instance = ModuleNode().get_module_instance(Status().current_node)
+            instance = BasicNode().get_module_instance(Status().current_node)
             return instance.command_set
 
     def set_auto_completer(self):
@@ -140,8 +140,11 @@ class BasicNode(Singleton):
             Command("st", "start shell", self.cmd_st, False, True),
             Command("show hostname", "show hostname", self.cmd_show_hostname, True, False),
             Command("configure terminal", "configure terminal", self.cmd_configure_terminal, True, False),
+            Command("refresh", "refresh module list", self.cmd_refresh, True, False),
             Command("exit", "exit", self.cmd_exit, True, True)
         ]
+        self.configure_terminal = None
+        self.init_configure_terminal()
         Autocompleter().init_command_set(self.command_set)
 
     def switch_cmd_working_state(self, command, status):
@@ -150,13 +153,41 @@ class BasicNode(Singleton):
                 cmd.workable = status
 
     def switch_login_mode(self):
-        show_logined_cmd = getattr(Status(), "login")
-        self.switch_cmd_working_state("disable", show_logined_cmd)
-        self.switch_cmd_working_state("show hostname", show_logined_cmd)
-        self.switch_cmd_working_state("configure terminal", show_logined_cmd)
-        self.switch_cmd_working_state("enable", not show_logined_cmd)
+        show_logined_view = getattr(Status(), "login")
+        self.switch_cmd_working_state("disable", show_logined_view)
+        self.switch_cmd_working_state("show hostname", show_logined_view)
+        self.switch_cmd_working_state("configure terminal", show_logined_view)
+        self.switch_cmd_working_state("refresh", show_logined_view)
+        self.switch_cmd_working_state("enable", not show_logined_view)
 
         Autocompleter().init_command_set(self.command_set)
+
+    def init_configure_terminal(self):
+        sys.path.append(MODULE_PATH)
+        module_list = listdir(MODULE_PATH)
+
+        module_set = []
+        for module_name in module_list:
+            instance = LoadModule(module_name).get_instance()
+            if instance is None:
+                continue
+
+            node_name = instance.node_name
+            if self.get_module_instance(node_name) is not None:
+                self.io.print_msg("Module \"%s\" is redundant, so do not add it." % node_name)
+                continue
+
+            module_set.append(ModuleCommand(node_name, instance.node_description, instance.command_set))
+
+        self.configure_terminal = ModuleCommand("configure terminal", "configure terminal", module_set)
+
+    def get_module_instance(self, node_name):
+        if self.configure_terminal is None:
+            return None
+
+        for module in self.configure_terminal.command_set:
+            if isinstance(module, ModuleCommand) and module.node_name == node_name:
+                return module
 
 
     ##### cmd function. #####
@@ -204,69 +235,8 @@ class BasicNode(Singleton):
         self.io.print_msg(self.io.get_host_name())
 
     def cmd_configure_terminal(self):
-        Status().configure = True
-
-
-class ModuleNode(Singleton):
-
-    def __init__(self):
-        self.io = IoControl()
-        self._command_set = [
-            Command("list", "command list", self.cmd_list, True, True),
-            Command("refresh", "refresh module list", self.cmd_refresh, True, True),
-            Command("exit", "exit", self.cmd_exit, True, True)
-        ]
-        self._module_command_set = []
-        self.cmd_refresh()
-
-    @property
-    def command_set(self):
-        return self._command_set + self._module_command_set
-
-    @property
-    def module_command_set(self):
-        return self._module_command_set
-
-    def init_module_command(self):
-        """
-        Loads the module information and initializes the node name and command
-        of the module to be registered in the CLI.
-        """
-        sys.path.append(MODULE_PATH)
-        modules_list = listdir(MODULE_PATH)
-
-        for module_name in modules_list:
-            instance = LoadModule(module_name).get_instance()
-            if instance is None:
-                continue
-
-            node_name = instance.node_name
-            if self.get_module_instance(node_name) is not None:
-                self.io.print_msg("Module \"%s\" is redundant, so do not add it." % node_name)
-                continue
-
-            self._module_command_set.append(ModuleCommand(node_name, instance.node_description, instance.command_set))
-
-    def get_module_instance(self, node_name):
-        for module in self._module_command_set:
-            if module.node_name == node_name:
-                return module
-
-    def get_node_names(self):
-        return [(module.node_name, module.node_description) for module in self._module_command_set]
-
-
-    ##### cmd function. #####
-    def cmd_list(self):
-        for cmd in self._command_set:
-            self.io.print_list(cmd.command, cmd.description)
-
-        for node_name, node_description in self.get_node_names():
-            self.io.print_list(node_name, node_description)
-
-    def cmd_exit(self):
-        Status().configure = False
+        Status().increase_module_depth()
+        Status().push_current_node("configure terminal")
 
     def cmd_refresh(self):
-        self._module_command_set = []
-        self.init_module_command()
+        pass

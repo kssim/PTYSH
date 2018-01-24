@@ -103,8 +103,9 @@ class Command(object):
 
 class ModuleCommand(object):
 
-    def __init__(self, node_name, command_set):
+    def __init__(self, node_name, node_description, command_set):
         self.node_name = node_name
+        self.node_description = node_description
         self.command_set = [
             Command("list", "command list", self.cmd_list, True, True),
             Command("exit", "exit", self.cmd_exit, True, True)
@@ -116,9 +117,9 @@ class ModuleCommand(object):
     def cmd_list(self):
         for command in self.command_set:
             if isinstance(command, ModuleCommand):
-                print ("  %s" % command.node_name)
+                print ("  %s%s" % (command.node_name, command.node_description))
             elif command.visible:
-                print ("  %s" % command.command.ljust(PRINT_FORMAT_PADDING))
+                print ("  %s%s" % (command.command.ljust(PRINT_FORMAT_PADDING), command.description))
 
     def cmd_exit(self):
         Status().decrease_module_depth()
@@ -240,7 +241,7 @@ class ModuleNode(Singleton):
                 print ("Module \"%s\" is redundant, so do not add it." % node_name)
                 continue
 
-            self._module_command_set.append(ModuleCommand(node_name, instance.command_set))
+            self._module_command_set.append(ModuleCommand(node_name, instance.node_description, instance.command_set))
 
     def get_module_instance(self, node_name):
         for module in self._module_command_set:
@@ -248,16 +249,16 @@ class ModuleNode(Singleton):
                 return module
 
     def get_node_names(self):
-        return [module.node_name for module in self._module_command_set]
+        return [(module.node_name, module.node_description) for module in self._module_command_set]
 
 
     ##### cmd function. #####
     def cmd_list(self):
         for cmd in self._command_set:
-            print ("  %s" % cmd.command.ljust(PRINT_FORMAT_PADDING))
+            print ("  %s%s" % (cmd.command.ljust(PRINT_FORMAT_PADDING), cmd.description))
 
-        for node_name in self.get_node_names():
-            print ("  %s" % node_name)
+        for node_name, node_description in self.get_node_names():
+            print ("  %s%s" % (node_name.ljust(PRINT_FORMAT_PADDING), node_description))
 
     def cmd_exit(self):
         Status().configure = False

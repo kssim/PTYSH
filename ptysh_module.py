@@ -5,6 +5,7 @@ class PtyshModule(object):
 
     def __init__(self):
         self._node_name = ""
+        self._node_description = ""
         self._command_set = []
 
     @property
@@ -14,6 +15,14 @@ class PtyshModule(object):
     @node_name.setter
     def node_name(self, node_name):
         self._node_name = node_name
+
+    @property
+    def node_description(self):
+        return self._node_description
+
+    @node_description.setter
+    def node_description(self, node_description):
+        self._node_description = node_description
 
     @property
     def command_set(self):

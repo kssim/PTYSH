@@ -105,7 +105,24 @@ class ModuleCommand(object):
 
     def __init__(self, node_name, command_set):
         self.node_name = node_name
-        self.command_set = command_set
+        self.command_set = [
+            Command("list", "command list", self.cmd_list, True, True),
+            Command("exit", "exit", self.cmd_exit, True, True)
+        ]
+        self.command_set += command_set
+
+
+    ##### cmd function. #####
+    def cmd_list(self):
+        for command in self.command_set:
+            if isinstance(command, ModuleCommand):
+                print ("  %s" % command.node_name)
+            elif command.visible:
+                print ("  %s" % command.command.ljust(PRINT_FORMAT_PADDING))
+
+    def cmd_exit(self):
+        Status().module = False
+
 
 
 class BasicNode(Singleton):
@@ -246,4 +263,5 @@ class ModuleNode(Singleton):
         Status().configure = False
 
     def cmd_refresh(self):
+        self._module_command_set = []
         self.init_module_command()

@@ -26,11 +26,6 @@ class IoControl(object):
         prompt_msg = self.get_prompt_msg()
         return input(prompt_msg) if sys.version_info >= (3,0) else raw_input(prompt_msg)
 
-    def print_hello_message(self):
-        message = "Hello, This is Python Teletype Shell.\n"
-        message += "COPYRIGHT 2017 KyeongSeob Sim. ALL RIGHTS RESERVED.\n\n"
-        sys.stdout.write(message)
-
     def get_host_name(self):
         if path.exists(HOST_NAME_FILE_PATH) == False:
             return "PTYSH"          # default prompt name
@@ -51,6 +46,16 @@ class IoControl(object):
         formatted_prompt = "%s%s%s " % (self._host_name.decode('utf-8'), location, prompt)
         return formatted_prompt
 
+    def print_hello_message(self):
+        message = "Hello, This is Python Teletype Shell.\n"
+        message += "COPYRIGHT 2017 KyeongSeob Sim. ALL RIGHTS RESERVED.\n"
+        self.print_msg(message)
+
+    def print_list(self, command, description):
+        self.print_msg("  %s%s" % (command.ljust(30), description))
+
+    def print_msg(self, msg):
+        print (msg)
 
 class Signal(Singleton):
 
@@ -150,8 +155,9 @@ class LoadModule(object):
             module = __import__(self.module_name)
             self.instance = getattr(module, self.module_name, None)
         except Exception as e:
-            print ("Module \"%s\" has something problem." % self.module_name)
-            print (e)
+            io = IoControl()
+            io.print_msg("Module \"%s\" has something problem." % self.module_name)
+            io.print_msg(e)
             return None
 
         return self.instance()

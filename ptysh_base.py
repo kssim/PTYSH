@@ -11,7 +11,6 @@ from ptysh_util import Singleton
 from ptysh_util import Status
 
 MODULE_PATH = path.join(path.abspath(path.dirname(__file__)), "modules")
-PRINT_FORMAT_PADDING = 30
 
 class Parser(Singleton):
 
@@ -27,7 +26,8 @@ class Parser(Singleton):
 
         splited_user_input = user_input.split(" ")
         if not self.parse_command_set(splited_user_input, self.get_command_set()):
-            print ("This command is not supported.")
+            io = IoControl()
+            io.print_msg("This command(\"%s\") is not supported." % user_input)
 
     def parse_command_set(self, splited_user_input, command_set):
         for command in command_set:
@@ -115,11 +115,13 @@ class ModuleCommand(object):
 
     ##### cmd function. #####
     def cmd_list(self):
+        io = IoControl()
+
         for command in self.command_set:
             if isinstance(command, ModuleCommand):
-                print ("  %s%s" % (command.node_name, command.node_description))
+                io.print_list(command.node_name, command.node_description)
             elif command.visible:
-                print ("  %s%s" % (command.command.ljust(PRINT_FORMAT_PADDING), command.description))
+                io.print_list(command.command, command.description)
 
     def cmd_exit(self):
         Status().decrease_module_depth()
@@ -130,6 +132,7 @@ class ModuleCommand(object):
 class BasicNode(Singleton):
 
     def __init__(self):
+        self.io = IoControl()
         self.command_set = [
             Command("enable", "enable mode", self.cmd_enable, True, True),
             Command("disable", "disable mode", self.cmd_disable, True, False),
@@ -163,27 +166,27 @@ class BasicNode(Singleton):
         en = Encryption()
         if en.validate_passwd(passwd) == False:
             Status().login = False
-            print ("Failed to enable mode activated.")
+            self.io.print_msg("Failed to enable mode activated.")
             return
 
         Status().login = True
         self.switch_login_mode()
-        print ("Enable mode has been activated.")
+        self.io.print_msg("Enable mode has been activated.")
 
     def cmd_disable(self):
         Status().login = False
         self.switch_login_mode()
-        print ("Enable mode has been deactivated.")
+        self.io.print_msg("Enable mode has been deactivated.")
 
     def cmd_st(self):
         passwd = getpass("passwd: ")
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            print ("Fail to enter the shell.")
+            self.io.print_msg("Fail to enter the shell.")
             return
 
-        print ("Enter the user shell.")
+        self.io.print_msg("Enter the user shell.")
         call("/bin/bash")
 
     def cmd_list(self):
@@ -191,15 +194,14 @@ class BasicNode(Singleton):
             if cmd.visible == False or cmd.workable == False:
                 continue
 
-            print ("  %s%s" % (cmd.command.ljust(PRINT_FORMAT_PADDING), cmd.description))
+            self.io.print_list(cmd.command, cmd.description)
 
     def cmd_exit(self):
-        print ("Program exit")
+        self.io.print_msg("Program exit")
         exit(0)
 
     def cmd_show_hostname(self):
-        io = IoControl()
-        print (io.get_host_name())
+        self.io.print_msg(self.io.get_host_name())
 
     def cmd_configure_terminal(self):
         Status().configure = True
@@ -208,6 +210,7 @@ class BasicNode(Singleton):
 class ModuleNode(Singleton):
 
     def __init__(self):
+        self.io = IoControl()
         self._command_set = [
             Command("list", "command list", self.cmd_list, True, True),
             Command("refresh", "refresh module list", self.cmd_refresh, True, True),
@@ -239,7 +242,7 @@ class ModuleNode(Singleton):
 
             node_name = instance.node_name
             if self.get_module_instance(node_name) is not None:
-                print ("Module \"%s\" is redundant, so do not add it." % node_name)
+                self.io.print_msg("Module \"%s\" is redundant, so do not add it." % node_name)
                 continue
 
             self._module_command_set.append(ModuleCommand(node_name, instance.node_description, instance.command_set))
@@ -256,10 +259,10 @@ class ModuleNode(Singleton):
     ##### cmd function. #####
     def cmd_list(self):
         for cmd in self._command_set:
-            print ("  %s%s" % (cmd.command.ljust(PRINT_FORMAT_PADDING), cmd.description))
+            self.io.print_list(cmd.command, cmd.description)
 
         for node_name, node_description in self.get_node_names():
-            print ("  %s%s" % (node_name.ljust(PRINT_FORMAT_PADDING), node_description))
+            self.io.print_list(node_name, node_description)
 
     def cmd_exit(self):
         Status().configure = False

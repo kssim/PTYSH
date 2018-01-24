@@ -10,7 +10,7 @@ class test_module(PtyshModule, Singleton):
 
     def __init__(self):
         PtyshModule.__init__(self)
-        PtyshModule.set_node_name(self, 'hello')
+        PtyshModule.node_name = "hello"
         PtyshModule.set_command(self, 'hello', 'say hello', self.cmd_print_hello, False, True)
         PtyshModule.set_command(self, 'hello_world', 'say hello world', self.cmd_print_hello_world, True, True)
         PtyshModule.set_command(self, 'change_msg', 'change print msg', self.cmd_send_msg_to_daemon, False, True)

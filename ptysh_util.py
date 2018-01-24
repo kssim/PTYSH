@@ -1,7 +1,7 @@
-import signal
 import sys
-from hashlib import sha256
+import signal
 from os import path
+from hashlib import sha256
 
 HOST_NAME_FILE_PATH = '/etc/hostname'
 
@@ -19,38 +19,37 @@ class Singleton(_Singleton('Singleton', (object,), {})): pass
 
 class IoControl(object):
 
-    _host_name = ''
-
     def __init__(self):
         self._host_name = self.get_host_name()
 
     def get_input_command(self):
-        return input() if sys.version_info >= (3,0) else raw_input()
-
-    def set_prompt(self):
-        prompt = '#' if getattr(Status(), "login") == True else '>'
-
-        if Status().sub_node == True:
-            location = '(%s)' % Status().current_node
-        elif getattr(Status(), "configure") == True:
-            location = '(configure terminal)'
-        else:
-            location = ''
-
-        formatted_prompt = '%s%s%s ' % (self._host_name.decode('utf-8'), location, prompt)
-        sys.stdout.write(formatted_prompt)
+        prompt_msg = self.get_prompt_msg()
+        return input(prompt_msg) if sys.version_info >= (3,0) else raw_input(prompt_msg)
 
     def print_hello_message(self):
-        message = 'Hello, This is Python Teletype Shell.\n'
-        message += 'COPYRIGHT 2017 KyeongSeob Sim. ALL RIGHTS RESERVED.\n\n'
+        message = "Hello, This is Python Teletype Shell.\n"
+        message += "COPYRIGHT 2017 KyeongSeob Sim. ALL RIGHTS RESERVED.\n\n"
         sys.stdout.write(message)
 
     def get_host_name(self):
         if path.exists(HOST_NAME_FILE_PATH) == False:
-            return 'PTYSH'          # default prompt name
+            return "PTYSH"          # default prompt name
 
-        with open(HOST_NAME_FILE_PATH, 'rb') as f:
+        with open(HOST_NAME_FILE_PATH, "rb") as f:
             return f.readline().strip()
+
+    def get_prompt_msg(self):
+        prompt = "#" if Status().login else ">"
+
+        if Status().module:
+            location = "(%s)" % Status().current_node
+        elif Status().configure:
+            location = "(configure terminal)"
+        else:
+            location = ""
+
+        formatted_prompt = "%s%s%s " % (self._host_name.decode('utf-8'), location, prompt)
+        return formatted_prompt
 
 
 class Signal(Singleton):
@@ -77,45 +76,79 @@ class Encryption(object):
 
 class Status(Singleton):
 
-    __attrs__ = [
-        "configure", "login"
-    ]
-
     def __init__(self):
-        self.configure = False
-        self.login = False
-
-        self._sub_node = False
-        self._current_node = ''
+        self._login = False
+        self._configure = False
+        self._module = False
+        self._current_node = ""
 
     @property
-    def sub_node(self):
-        return self._sub_node
+    def login(self):
+        return self._login
 
-    @sub_node.setter
-    def sub_node(self, in_state):
-        if in_state == False:
-            self._current_node = ''
+    @login.setter
+    def login(self, state):
+        self._login = state
 
-        self._sub_node = in_state
+    @property
+    def configure(self):
+        return self._configure
+
+    @configure.setter
+    def configure(self, state):
+        self._configure = state
+
+    @property
+    def module(self):
+        return self._module
+
+    @module.setter
+    def module(self, state):
+        if not state:
+            self._current_node = ""
+
+        self._module = state
 
     @property
     def current_node(self):
         return self._current_node
 
     @current_node.setter
-    def current_node(self, in_node_name):
-        self._current_node = in_node_name
+    def current_node(self, node_name):
+        self._current_node = node_name
 
 
 class LoadModule(object):
 
-    _instance = None
+    def __init__(self, module_path):
+        self.module_path = module_path
+        self.module_name = self.get_module_name()
 
-    def __init__(self, in_module_name, in_class_name):
-        module = __import__(in_module_name)
-        self._instance = getattr(module, in_class_name)
+    def get_module_name(self):
+        """
+        Get the name of the module to load.
+        Except that the extension is not "py" and the filename is "__init__".
+        """
+        file_name, file_extension = path.splitext(self.module_path)
+        if file_extension != ".py" or file_name == "__init__":
+            return ""
 
-    @property
-    def instance(self):
-        return self._instance()
+        return file_name
+
+    def get_instance(self):
+        """
+        Load the module.
+        If the module name does not exist or an exception is thrown, it returns None.
+        """
+        if self.module_name == "":
+            return None
+
+        try:
+            module = __import__(self.module_name)
+            self.instance = getattr(module, self.module_name, None)
+        except Exception as e:
+            print ("Module \"%s\" has something problem." % self.module_name)
+            print (e)
+            return None
+
+        return self.instance()

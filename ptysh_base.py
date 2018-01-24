@@ -3,163 +3,179 @@ from os import path
 from os import listdir
 from subprocess import call
 from getpass import getpass
+
 from ptysh_util import LoadModule
 from ptysh_util import Encryption
 from ptysh_util import IoControl
 from ptysh_util import Singleton
 from ptysh_util import Status
 
-MODULE_PATH = path.join(path.abspath(path.dirname(__file__)), 'modules')
-
-COMMAND_LIST_CMD_IDX = 0
-COMMAND_LIST_SHOW_CMD_IDX = 1
-COMMAND_LIST_CONFIGURE_CMD_IDX = 1
-COMMAND_LIST_DOC_IDX = 1
-COMMAND_LIST_FUNC_IDX = 2
-COMMAND_LIST_HIDDEN_IDX = 3
-COMMAND_LIST_WORKING_IDX = 4
-
+MODULE_PATH = path.join(path.abspath(path.dirname(__file__)), "modules")
 PRINT_FORMAT_PADDING = 30
 
 class Parser(Singleton):
 
-    def parse_command_line(self, in_cmd):
-        if len(in_cmd) == 0:    # Skip input 'enter' key.
+    def parse_user_input(self, user_input):
+        """
+        Compares the user's input with the stored command set and finds the command to process.
+        Find the result by dividing the input value and command by spaces and comparing them.
+        """
+        if ModuleNode().get_module_instance(user_input) is not None:
+            Status().module = True
+            Status().current_node = user_input
             return
 
-        parser = ModulesCommand() if getattr(Status(), "configure") == True else BasicCommand()
-        parse_result = parser.run_command(in_cmd.split(' '))
+        splited_user_input = user_input.split(" ")
+        if not self.parse_command_set(splited_user_input, self.get_command_set()):
+            print ("This command is not supported.")
 
-        if parse_result == False:
-            print ('Not support command.')
+    def parse_command_set(self, splited_user_input, command_set):
+        for command in command_set:
+            if isinstance(command, ModuleCommand):
+                return self.parse_command_set(splited_user_input, command.command_set)
 
-        ModulesCommand().set_autocompleter()
-        BasicCommand().set_autocompleter()
+            if self.parser(splited_user_input, command):
+                return True
+        return False
+
+    def parser(self, splited_user_input, command):
+        split_stored_command = command.command.split(" ")
+        if len(splited_user_input) > len(split_stored_command):
+            # The user's input must contain the same value or more than the stored command,
+            # because it contains the argument value.
+            return False
+
+        if command.workable and splited_user_input[:len(split_stored_command)] == split_stored_command:
+            # Make sure that the commands except the arguments are matched and must be workable command.
+            command.handler()
+            return True
+        return False
+
+    def get_command_set(self):
+        """
+        Get the command set for the current node position.
+        """
+        if not Status().configure:                          # base node
+            return BasicNode().command_set
+        elif Status().configure and not Status().module:    # configure node
+            return ModuleNode().command_set
+        else:                                               # module node
+            instance = ModuleNode().get_module_instance(Status().current_node)
+            return instance.command_set
+
+    def set_auto_completer(self):
+        """
+        Registers the commands used in the current node to be autocompleted.
+        """
+        cmd_set = []
+        for command in self.get_command_set():
+            cmd_set.append(command.node_name if isinstance(command, ModuleCommand) else command)
+
+        Autocompleter().init_command_set(cmd_set)
 
 
 class Autocompleter(Singleton):
 
-    _cmd_list = []
+    def __init__(self):
+        self.cmd_set = []
 
-    def get_cmd_list(self):
-        return self._cmd_list
-
-    def add_cmd_list(self, in_cmd_list):
-        for cmd in in_cmd_list:
-            if len(cmd) > 4 and cmd[COMMAND_LIST_WORKING_IDX] == False:
-                # Exception code.
-                # 'configure terminal' modules list has only two cmd items.
-                # So, skip the 'configure terminal' modules list.
-                continue
-
-            self._cmd_list.append(cmd[COMMAND_LIST_CMD_IDX])
-
-    def del_cmd_list(self, in_cmd_list):
-        for cmd in in_cmd_list:
-            self._cmd_list = [x for x in self._cmd_list if x != cmd[COMMAND_LIST_CMD_IDX]]
+    def init_command_set(self, cmd_set):
+        """
+        Initialize autocomplete command set.
+        """
+        del self.cmd_set[:]     # python2 does not support clear of list.
+        for cmd in cmd_set:
+            if type(cmd) == str:
+                self.cmd_set.append(cmd)
+            elif cmd.visible and cmd.workable:
+                self.cmd_set.append(cmd.command)
 
 
-class BasicCommand(Singleton):
+class Command(object):
 
-    _basic_command = []
+    def __init__(self, command, description, handler, visible=True, workable=True):
+        self.command = command
+        self.description = description
+        self.handler = handler
+        self.visible = visible
+        self.workable = workable
+
+
+class ModuleCommand(object):
+
+    def __init__(self, node_name, command_set):
+        self.node_name = node_name
+        self.command_set = command_set
+
+
+class BasicNode(Singleton):
 
     def __init__(self):
-        self._basic_command = [['enable', 'enable mode', self.cmd_enable, False, True],
-                              ['disable', 'disable mode', self.cmd_disable, False, False],
-                              ['list', 'command list', self.cmd_list, False, True],
-                              ['st', 'start shell', self.cmd_st, True, True],
-                              ['show hostname', 'show hostname', self.cmd_show_hostname, False, False],
-                              ['configure terminal', 'configure terminal', self.cmd_configure_terminal, False, False],
-                              ['exit', 'exit', self.cmd_exit, False, True]]
-        Autocompleter().add_cmd_list(self._basic_command)
+        self.command_set = [
+            Command("enable", "enable mode", self.cmd_enable, True, True),
+            Command("disable", "disable mode", self.cmd_disable, True, False),
+            Command("list", "command list", self.cmd_list, True, True),
+            Command("st", "start shell", self.cmd_st, False, True),
+            Command("show hostname", "show hostname", self.cmd_show_hostname, True, False),
+            Command("configure terminal", "configure terminal", self.cmd_configure_terminal, True, False),
+            Command("exit", "exit", self.cmd_exit, True, True)
+        ]
+        Autocompleter().init_command_set(self.command_set)
 
-    def set_autocompleter(self):
-        if getattr(Status(), "configure") == True:
-            return
-
-        Autocompleter().add_cmd_list(self._basic_command)
-
-    def run_command(self, in_cmd):
-        if in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'show':
-            if len(in_cmd) == 1:
-                return False
-
-            command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_SHOW_CMD_IDX].strip()
-        elif in_cmd[COMMAND_LIST_CMD_IDX].strip() == 'configure':
-            if len(in_cmd) == 1:
-                return False
-
-            if in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip() != 'terminal':
-                return False
-
-            command = in_cmd[COMMAND_LIST_CMD_IDX].strip() + ' ' + in_cmd[COMMAND_LIST_CONFIGURE_CMD_IDX].strip()
-        else:
-            command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
-
-
-        for cmd in self._basic_command:
-            if command == cmd[COMMAND_LIST_CMD_IDX].strip() and cmd[COMMAND_LIST_WORKING_IDX] == True:
-                cmd_function = cmd[COMMAND_LIST_FUNC_IDX]
-                cmd_function()
-                return True
-
-        return False
-
-    def switch_cmd_working_state(self, in_keyword, in_working_state):
-        for cmd in self._basic_command:
-            if in_keyword == cmd[COMMAND_LIST_CMD_IDX].strip():
-                cmd[COMMAND_LIST_WORKING_IDX] = in_working_state
+    def switch_cmd_working_state(self, command, status):
+        for cmd in self.command_set:
+            if cmd.command == command:
+                cmd.workable = status
 
     def switch_login_mode(self):
-        logined = getattr(Status(), "login")
-        self.switch_cmd_working_state('disable', logined)
-        self.switch_cmd_working_state('show hostname', logined)
-        self.switch_cmd_working_state('configure terminal', logined)
-        self.switch_cmd_working_state('enable', not logined)
+        show_logined_cmd = getattr(Status(), "login")
+        self.switch_cmd_working_state("disable", show_logined_cmd)
+        self.switch_cmd_working_state("show hostname", show_logined_cmd)
+        self.switch_cmd_working_state("configure terminal", show_logined_cmd)
+        self.switch_cmd_working_state("enable", not show_logined_cmd)
 
-        Autocompleter().del_cmd_list(self._basic_command)
-        Autocompleter().add_cmd_list(self._basic_command)
+        Autocompleter().init_command_set(self.command_set)
 
 
     ##### cmd function. #####
     def cmd_enable(self):
-        passwd = getpass('password: ')
+        passwd = getpass("password: ")
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            setattr(Status(), "login", False)
-            print ('Failed to enable mode activated.')
+            Status().login = False
+            print ("Failed to enable mode activated.")
             return
 
-        setattr(Status(), "login", True)
+        Status().login = True
         self.switch_login_mode()
-        print ('Enable mode has been activated.')
+        print ("Enable mode has been activated.")
 
     def cmd_disable(self):
-        setattr(Status(), "login", False)
+        Status().login = False
         self.switch_login_mode()
-        print ('Enable mode has been deactivated.')
+        print ("Enable mode has been deactivated.")
 
     def cmd_st(self):
-        passwd = getpass('passwd: ')
+        passwd = getpass("passwd: ")
 
         en = Encryption()
         if en.validate_passwd(passwd) == False:
-            print ('Fail to enter the shell.')
+            print ("Fail to enter the shell.")
             return
 
-        print ('Enter the user shell.')
-        call('/bin/bash')
+        print ("Enter the user shell.")
+        call("/bin/bash")
 
     def cmd_list(self):
-        for cmd in self._basic_command:
-            if cmd[COMMAND_LIST_HIDDEN_IDX] == True or cmd[COMMAND_LIST_WORKING_IDX] == False:
+        for cmd in self.command_set:
+            if cmd.visible == False or cmd.workable == False:
                 continue
 
-            print ('  %s%s' % (cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING), cmd[COMMAND_LIST_DOC_IDX]))
+            print ("  %s%s" % (cmd.command.ljust(PRINT_FORMAT_PADDING), cmd.description))
 
     def cmd_exit(self):
-        print ('Program exit')
+        print ("Program exit")
         exit(0)
 
     def cmd_show_hostname(self):
@@ -167,110 +183,67 @@ class BasicCommand(Singleton):
         print (io.get_host_name())
 
     def cmd_configure_terminal(self):
-        setattr(Status(), "configure", True)
-        Autocompleter().del_cmd_list(self._basic_command)
+        Status().configure = True
 
 
-class ModulesCommand(Singleton):
-
-    _modules_command = []
-    _subnode_modules_command = []
+class ModuleNode(Singleton):
 
     def __init__(self):
+        self._command_set = [
+            Command("list", "command list", self.cmd_list, True, True),
+            Command("refresh", "refresh module list", self.cmd_refresh, True, True),
+            Command("exit", "exit", self.cmd_exit, True, True)
+        ]
+        self._module_command_set = []
         self.cmd_refresh()
 
-    def init_basic_command(self):
-        self._modules_command = [['list', 'command list', self.cmd_list, False, True],
-                              ['refresh', 'refresh module list', self.cmd_refresh, False, True],
-                              ['exit', 'exit', self.cmd_exit, False, True]]
+    @property
+    def command_set(self):
+        return self._command_set + self._module_command_set
 
-    def init_command(self):
+    @property
+    def module_command_set(self):
+        return self._module_command_set
+
+    def init_module_command(self):
+        """
+        Loads the module information and initializes the node name and command
+        of the module to be registered in the CLI.
+        """
         sys.path.append(MODULE_PATH)
         modules_list = listdir(MODULE_PATH)
 
-        for module in modules_list:
-            file_name, file_extension = path.splitext(module)
-            if file_extension != '.py' or file_name == '__init__':
+        for module_name in modules_list:
+            instance = LoadModule(module_name).get_instance()
+            if instance is None:
                 continue
 
-            try:
-                module = LoadModule(file_name, file_name)
-                instance = module.instance
-            except:
-                print ('Your module(\'%s\') has a problem.' % file_name)
-                print ('Please check your module\'s file name and class name.')
-                continue
-            else:
-                if instance == None:
-                    continue
-
-                node_name = instance.get_node_name()
-                module_list = instance.get_command_list()
-
-
-            if self.module_cmd_duplicate_check(node_name) == True:
-                print ('\'%s\' module name is duplicated, so this module is not added.' % file_name)
+            node_name = instance.node_name
+            if self.get_module_instance(node_name) is not None:
+                print ("Module \"%s\" is redundant, so do not add it." % node_name)
                 continue
 
-            self._modules_command.append([node_name, module_list])
+            self._module_command_set.append(ModuleCommand(node_name, instance.command_set))
 
-        if len(self._modules_command) == 0:
-            print ('Not usable modules.')
-            return
+    def get_module_instance(self, node_name):
+        for module in self._module_command_set:
+            if module.node_name == node_name:
+                return module
 
-    def module_cmd_duplicate_check(self, key):
-        for module in self._modules_command:
-            if key in module:
-                return True
-        return False
-
-    def set_autocompleter(self):
-        if Status().sub_node == True:
-            Autocompleter().add_cmd_list(self._subnode_modules_command)
-        else:
-            Autocompleter().del_cmd_list(self._subnode_modules_command)
-
-        if getattr(Status(), "configure") == True:
-            Autocompleter().add_cmd_list(self._modules_command)
-        else:
-            Autocompleter().del_cmd_list(self._modules_command)
-
-
-    def run_command(self, in_cmd):
-        command = in_cmd[COMMAND_LIST_CMD_IDX].strip()
-
-        cmd_list = self._subnode_modules_command if Status().sub_node == True else self._modules_command
-        for cmd in cmd_list:
-            if command != cmd[COMMAND_LIST_CMD_IDX].strip():
-                continue
-
-            if len(cmd) == 2:                                   # submodules list count (module_name, module_command_list)
-                Status().sub_node = True
-                Status().current_node = cmd[0]                  # module_name index
-                self._subnode_modules_command = cmd[1]          # modules_command_list index
-            else:
-                cmd_function = cmd[COMMAND_LIST_FUNC_IDX]
-                try:
-                    cmd_function(*in_cmd[1:])                   # pass arguments and skip command.
-                except:
-                    print ("This command is not supported.")
-
-            return True
-        return False
-
+    def get_node_names(self):
+        return [module.node_name for module in self._module_command_set]
 
 
     ##### cmd function. #####
     def cmd_list(self):
-        cmd_list = self._subnode_modules_command if Status().sub_node == True else self._modules_command
-        for cmd in self._modules_command:
-            print ('  %s' % cmd[COMMAND_LIST_CMD_IDX].ljust(PRINT_FORMAT_PADDING))
+        for cmd in self._command_set:
+            print ("  %s" % cmd.command.ljust(PRINT_FORMAT_PADDING))
+
+        for node_name in self.get_node_names():
+            print ("  %s" % node_name)
 
     def cmd_exit(self):
-        setattr(Status(), "configure", False)
-        self.set_autocompleter()
+        Status().configure = False
 
     def cmd_refresh(self):
-        self.init_basic_command()
-        self.init_command()
-        self.set_autocompleter()
+        self.init_module_command()

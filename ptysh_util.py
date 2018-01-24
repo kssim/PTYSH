@@ -82,7 +82,7 @@ class Status(Singleton):
         self._login = False
         self._configure = False
         self._module_depth = self.ZERO_DEPTH
-        self._current_node = ""
+        self._current_node = []
 
     @property
     def login(self):
@@ -112,11 +112,13 @@ class Status(Singleton):
 
     @property
     def current_node(self):
-        return self._current_node
+        return "" if len(self._current_node) == 0 else self._current_node[-1]
 
-    @current_node.setter
-    def current_node(self, node_name):
-        self._current_node = node_name
+    def push_current_node(self, node_name):
+        self._current_node.append(node_name)
+
+    def pop_current_node(self):
+        self._current_node.pop()
 
 
 class LoadModule(object):

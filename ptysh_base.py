@@ -20,9 +20,9 @@ class Parser(Singleton):
         Compares the user's input with the stored command set and finds the command to process.
         Find the result by dividing the input value and command by spaces and comparing them.
         """
-        if ModuleNode().get_module_instance(user_input) is not None:
+        if Status().current_node != user_input and ModuleNode().get_module_instance(user_input) is not None:
             Status().increase_module_depth()
-            Status().current_node = user_input
+            Status().push_current_node(user_input)
             return
 
         splited_user_input = user_input.split(" ")
@@ -123,6 +123,7 @@ class ModuleCommand(object):
 
     def cmd_exit(self):
         Status().decrease_module_depth()
+        Status().pop_current_node()
 
 
 

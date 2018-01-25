@@ -24,13 +24,12 @@ def main():
     readline.parse_and_bind("tab: complete")
     readline.set_completer(auto_completer)
 
-    io = IoControl()
-    io.print_welcome_message()
+    IoControl().print_welcome_message()
 
     RootNode()
 
     while True:
-        user_input = io.get_input_command()
+        user_input = IoControl().get_input_command()
         if len(user_input) == 0:        # Skip input "enter" key.
             continue
 

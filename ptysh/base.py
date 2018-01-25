@@ -55,7 +55,6 @@ class RootNode(Singleton):
         ]
         Autocompleter().init_command_set(self.command_set)
 
-        self.io = IoControl()
         self.cmd_refresh()
 
     def switch_enable_mode(self, enabled):
@@ -83,7 +82,7 @@ class RootNode(Singleton):
                 continue
 
             if self.get_module_instance(module.node_name) is not None:
-                self.io.print_message("Module \"%s\" is duplicated, so do not add it." % module.node_name)
+                IoControl().print_message("Module \"%s\" is duplicated, so do not add it." % module.node_name)
                 continue
 
             module_command_set.append(ModuleCommand(module.node_name, module.node_description, module.command_set))
@@ -107,40 +106,40 @@ class RootNode(Singleton):
         if encrypt.check_passwd(passwd):
             Status().login = True
             self.switch_enable_mode(Status().login)
-            self.io.print_message("Enable mode has been activated.")
+            IoControl().print_message("Enable mode has been activated.")
         else:
             Status().login = False
-            self.io.print_message("Failed to enable mode activated.")
+            IoControl().print_message("Failed to enable mode activated.")
 
     def cmd_disable(self):
         Status().login = False
         self.switch_enable_mode(Status().login)
-        self.io.print_message("Enable mode has been deactivated.")
+        IoControl().print_message("Enable mode has been deactivated.")
 
     def cmd_st(self):
         passwd = getpass("passwd: ")
 
         encrypt = Encryption()
         if encrypt.check_passwd(passwd):
-            self.io.print_message("Enter the user shell.")
+            IoControl().print_message("Enter the user shell.")
             call("/bin/bash")
         else:
-            self.io.print_message("Fail to enter the shell.")
+            IoControl().print_message("Fail to enter the shell.")
 
     def cmd_list(self):
         for cmd in self.command_set:
             if cmd.visible and cmd.workable:
-                self.io.print_cmd_list(cmd.command, cmd.description)
+                IoControl().print_cmd_list(cmd.command, cmd.description)
 
     def cmd_show_hostname(self):
-        self.io.print_message(self.io.get_host_name())
+        IoControl().print_message(IoControl().get_host_name())
 
     def cmd_configure_node(self):
         Status().increase_module_depth()
         Status().push_current_node("configure terminal")
 
     def cmd_exit(self):
-        self.io.print_message("Exit ptysh.")
+        IoControl().print_message("Exit ptysh.")
         exit(0)
 
     def cmd_refresh(self):

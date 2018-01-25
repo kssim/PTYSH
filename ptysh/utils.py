@@ -59,9 +59,8 @@ class LoadModule(object):
             module = __import__(self.module_name)
             self.instance = getattr(module, self.module_name, None)
         except Exception as e:
-            io = IoControl()
-            io.print_message("Module \"%s\" has something problem." % self.module_name)
-            io.print_message(e)
+            IoControl().print_message("Module \"%s\" has something problem." % self.module_name)
+            IoControl().print_message(e)
             return None
 
         return self.instance()

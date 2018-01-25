@@ -32,12 +32,11 @@ class ModuleCommand(object):
 
     ##### cmd function. #####
     def cmd_list(self):
-        io = IoControl()
         for command in self.command_set:
             if isinstance(command, ModuleCommand):
-                io.print_cmd_list(command.node_name, command.node_description)
+                IoControl().print_cmd_list(command.node_name, command.node_description)
             elif command.visible:
-                io.print_cmd_list(command.command, command.description)
+                IoControl().print_cmd_list(command.command, command.description)
 
     def cmd_exit(self):
         Status().decrease_module_depth()

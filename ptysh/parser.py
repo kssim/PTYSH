@@ -26,8 +26,7 @@ class Parser(Singleton):
 
         splited_user_input = user_input.split(" ")
         if not self.check_command_set(splited_user_input, self.get_command_set()):
-            io = IoControl()
-            io.print_message("This command(\"%s\") is not supported." % user_input)
+            IoControl().print_message("This command(\"%s\") is not supported." % user_input)
 
     def get_command_set(self):
         """

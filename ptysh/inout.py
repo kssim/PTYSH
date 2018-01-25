@@ -8,11 +8,12 @@ import sys
 from os import path
 
 from structure import Status
+from structure import Singleton
 
 HOST_NAME_FILE_PATH = "/etc/hostname"
 
 
-class IoControl(object):
+class IoControl(Singleton):
 
     def get_input_command(self):
         prompt = self.get_prompt()

@@ -6,16 +6,16 @@ from structure import Singleton
 DBUS_BUS_NAME = "com.kssim.test"
 DBUS_OBJECT_PATH = "/com/kssim/test"
 
-class test_module(PtyshModule, Singleton):
+class test_module(PtyshModule):
 
     def __init__(self):
-        PtyshModule.__init__(self)
-        PtyshModule.node_name = "hello"
-        PtyshModule.node_description = "hello node"
-        PtyshModule.add_command(self, "hello", "say hello", self.cmd_print_hello)
-        PtyshModule.add_command(self, "hello_world", "say hello world", self.cmd_print_hello_world)
-        PtyshModule.add_command(self, "argument", "argument", self.cmd_print_argument, "Please enter one or more arguments")
-        PtyshModule.add_command(self, "change_msg", "change print msg", self.cmd_send_msg_to_daemon, "", False)
+        super(test_module, self).__init__()
+        super(test_module, self).init_node("hello", "hello node")
+        super(test_module, self).set_dbus_info(DBUS_BUS_NAME, DBUS_OBJECT_PATH, DBUS_BUS_NAME)
+        super(test_module, self).add_command("hello", "say hello", self.cmd_print_hello)
+        super(test_module, self).add_command("hello_world", "say hello world", self.cmd_print_hello_world)
+        super(test_module, self).add_command("argument", "argument", self.cmd_print_argument, "Please enter one or more arguments")
+        super(test_module, self).add_command("change_msg", "change print msg", super(test_module, self).dbus_handler, "", False)
 
     def cmd_print_hello(self):
         print ("hello")
@@ -28,13 +28,3 @@ class test_module(PtyshModule, Singleton):
             print (arg)
             return True
         return False
-
-    def cmd_send_msg_to_daemon(self, in_msg):
-        try:
-            bus = dbus.SystemBus()
-            bus_object = bus.get_object(DBUS_BUS_NAME, DBUS_OBJECT_PATH)
-            bus_interface = dbus.Interface(bus_object, DBUS_BUS_NAME)
-
-            bus_interface.receive_signal(in_msg)
-        except:
-            print ("The daemon is not loaded.")

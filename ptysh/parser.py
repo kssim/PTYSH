@@ -72,7 +72,7 @@ class Parser(Singleton):
             argument_list = splited_user_input[len(split_stored_command):]
             try:
                 result = command.handler() if not argument_list else command.handler(argument_list)
-            except:
+            except Exception as e:
                 IoControl().print_message("Invalid command argument")
                 if command.usage:
                     IoControl().print_message(command.usage)

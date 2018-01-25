@@ -16,10 +16,11 @@ class Parser(Singleton):
 
     def parse_user_input(self, user_input):
         """
-        Compares the user's input with the stored command set and finds the command to process.
-        Find the result by dividing the input value and command by spaces and comparing them.
+        Process the command entered by the user.
+        Distinguishes between moving a node and executing a command in a node.
         """
         if Status().current_node != user_input and RootNode().get_module_instance(user_input) is not None:
+            # The part moving to the child node.
             Status().increase_module_depth()
             Status().push_current_node(user_input)
             return
@@ -32,7 +33,7 @@ class Parser(Singleton):
         """
         Get the command set for the current node position.
         """
-        if Status().module_depth == Status().ZERO_DEPTH:            # base node
+        if Status().module_depth == Status().ROOT_DEPTH:            # base node
             return RootNode().command_set
         elif Status().module_depth == Status().CONFIGURE_DEPTH:     # configure node
             return RootNode().configure_node.command_set
@@ -41,6 +42,10 @@ class Parser(Singleton):
             return instance.command_set
 
     def check_command_set(self, splited_user_input, command_set):
+        """
+        Ensure that the command entered by the user is included in the node's command set.
+        If the command is contained in a node, parse the command.
+        """
         for command in command_set:
             if isinstance(command, ModuleCommand):
                 return self.check_command_set(splited_user_input, command.command_set)
@@ -50,6 +55,11 @@ class Parser(Singleton):
         return False
 
     def parser(self, splited_user_input, command):
+        """
+        Compare user input with stored commands.
+        Separate each value with a space and compare by word.
+        The argument values are excluded.
+        """
         split_stored_command = command.command.split(" ")
         if len(splited_user_input) > len(split_stored_command):
             # The user's input must contain the same value or more than the stored command,
@@ -57,7 +67,8 @@ class Parser(Singleton):
             return False
 
         if command.workable and splited_user_input[:len(split_stored_command)] == split_stored_command:
-            # Make sure that the commands except the arguments are matched and must be workable command.
+            # Check that the commands except the argument match.
+            # Then, check whether the command is workable.
             command.handler()
             return True
         return False

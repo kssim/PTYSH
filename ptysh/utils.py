@@ -13,6 +13,10 @@ from structure import Singleton
 
 class Signal(Singleton):
 
+    """
+    Classes for handling various signals.
+    """
+
     def empty_signal_handler(self, signal, frame):
         return
 
@@ -22,6 +26,11 @@ class Signal(Singleton):
 
 
 class Encryption(object):
+
+    """
+    Class for managing enable password.
+    Encrypt with sha256.
+    """
 
     _salt = "IPOT_PTYSH"
     _default_passwd = "5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146"    # Encrypted string "ptysh"
@@ -34,6 +43,10 @@ class Encryption(object):
 
 
 class LoadModule(object):
+
+    """
+    Class for loading submodules.
+    """
 
     def __init__(self, module_path):
         self.module_path = module_path

@@ -16,10 +16,18 @@ HOST_NAME_FILE_PATH = "/etc/hostname"
 class IoControl(Singleton):
 
     def get_input_command(self):
+        """
+        Displays a prompt and receives a command from the user.
+        """
         prompt = self.get_prompt()
         return input(prompt) if sys.version_info >= (3,0) else raw_input(prompt)
 
     def get_host_name(self):
+        """
+        Set the name to be used at the prompt displayed on the screen.
+        Get the value from the "/ etc / hostname" file.
+        If there is no file, PTYSH is displayed.
+        """
         if not path.exists(HOST_NAME_FILE_PATH):
             return "PTYSH"      # default prompt name
 
@@ -27,7 +35,11 @@ class IoControl(Singleton):
             return f.readline().strip().decode("utf-8")
 
     def get_prompt(self):
-        if Status().module_depth > Status().ZERO_DEPTH:
+        """
+        Set the prompt that appears on the screen.
+        Indicates the name of the current node.
+        """
+        if Status().module_depth > Status().ROOT_DEPTH:
             location = "(%s)" % Status().current_node
         else:
             location = ""

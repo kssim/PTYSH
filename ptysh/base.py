@@ -54,10 +54,12 @@ class RootNode(Singleton):
             Command("exit", "exit", self.cmd_exit, True, True)
         ]
         Autocompleter().init_command_set(self.command_set)
-
         self.cmd_refresh()
 
     def switch_enable_mode(self, enabled):
+        """
+        Change the commands used in enable and disable modes.
+        """
         self.switch_enable_related_command("disable", enabled)
         self.switch_enable_related_command("show hostname", enabled)
         self.switch_enable_related_command("configure terminal", enabled)
@@ -72,6 +74,9 @@ class RootNode(Singleton):
                 cmd.workable = status
 
     def init_configure_node(self):
+        """
+        Initialize nodes and commands used by configure node.
+        """
         sys.path.append(MODULE_PATH)
         module_list = listdir(MODULE_PATH)
 
@@ -90,6 +95,9 @@ class RootNode(Singleton):
         self.configure_node = ModuleCommand("configure terminal", "configure terminal", module_command_set)
 
     def get_module_instance(self, node_name):
+        """
+        Returns the module object found by the name of the node.
+        """
         if self.configure_node is None:
             return None
 

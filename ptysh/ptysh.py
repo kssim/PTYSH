@@ -14,6 +14,9 @@ from utils import Signal
 
 
 def auto_completer(text, state):
+    """
+    Handler for autocomplete.
+    """
     options = [i for i in Autocompleter().command_list if i.startswith(text)]
     return options[state] if state < len(options) else None
 
@@ -25,7 +28,6 @@ def main():
     readline.set_completer(auto_completer)
 
     IoControl().print_welcome_message()
-
     RootNode()
 
     while True:

@@ -9,6 +9,11 @@ from data import Command
 
 class PtyshModule(object):
 
+    """
+    Interfaces required when developing a node in a child module
+    The child module inherits this interface and implements the node's name, description, and command.
+    """
+
     def __init__(self):
         self._node_name = ""
         self._node_description = ""

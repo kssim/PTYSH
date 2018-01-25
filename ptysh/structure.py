@@ -20,12 +20,17 @@ class Singleton(_Singleton("Singleton", (object,), {})): pass
 
 class Status(Singleton):
 
-    ZERO_DEPTH = 0
+    """
+    Class for checking status in PTYSH
+    You can check the login(enable) status, the depth of the node, and the name of the node.
+    """
+
+    ROOT_DEPTH = 0
     CONFIGURE_DEPTH = 1
 
     def __init__(self):
         self._login = False
-        self._module_depth = self.ZERO_DEPTH
+        self._module_depth = self.ROOT_DEPTH
         self._current_node = []
 
     @property

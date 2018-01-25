@@ -1,5 +1,10 @@
-from ptysh_util import Status
-from ptysh_base import Command
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
+from data import Command
+
 
 class PtyshModule(object):
 
@@ -28,5 +33,5 @@ class PtyshModule(object):
     def command_set(self):
         return self._command_set
 
-    def set_command(self, in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working):
+    def add_command(self, in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working):
         self._command_set.append(Command(in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working))

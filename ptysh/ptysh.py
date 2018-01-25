@@ -1,11 +1,16 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+"""
 
 import readline
-from ptysh_base import Parser
-from ptysh_base import BasicNode
-from ptysh_base import Autocompleter
-from ptysh_util import Signal
-from ptysh_util import IoControl
+
+from inout import IoControl
+from base import BasicNode
+from parser import Parser
+from parser import Autocompleter
+from utils import Signal
+
 
 def auto_completer(in_text, in_state):
     options = [i for i in Autocompleter().cmd_set if i.startswith(in_text)]

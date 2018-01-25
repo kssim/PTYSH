@@ -42,6 +42,8 @@ class Autocompleter(Singleton):
 
 class RootNode(Singleton):
 
+    EXIT_CODE = "EXIT"
+
     def __init__(self):
         self.command_set = [
             Command("enable", "enable mode", self.cmd_enable, True, True),
@@ -148,7 +150,7 @@ class RootNode(Singleton):
 
     def cmd_exit(self):
         IoControl().print_message("Exit ptysh.")
-        exit(0)
+        return self.EXIT_CODE
 
     def cmd_refresh(self):
         self.configure_node = None

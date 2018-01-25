@@ -61,7 +61,7 @@ class Parser(Singleton):
         The argument values are excluded.
         """
         split_stored_command = command.command.split(" ")
-        if len(splited_user_input) > len(split_stored_command):
+        if len(split_stored_command) > len(splited_user_input):
             # The user's input must contain the same value or more than the stored command,
             # because it contains the argument value.
             return False
@@ -69,8 +69,18 @@ class Parser(Singleton):
         if command.workable and splited_user_input[:len(split_stored_command)] == split_stored_command:
             # Check that the commands except the argument match.
             # Then, check whether the command is workable.
-            command.handler()
-            return True
+            argument_list = splited_user_input[len(split_stored_command):]
+            try:
+                result = command.handler() if not argument_list else command.handler(argument_list)
+            except:
+                IoControl().print_message("Invalid command argument")
+                return True
+
+            if result == RootNode().EXIT_CODE:
+                exit(0)
+
+            return True if result or result is None else False
+
         return False
 
     def set_auto_completer(self):

@@ -1,41 +1,42 @@
 # -*- coding: utf-8 -*-
 
 """
+Main module for running ptysh.
 """
 
 import readline
 
 from inout import IoControl
-from base import BasicNode
+from base import RootNode
 from parser import Parser
-from parser import Autocompleter
+from base import Autocompleter
 from utils import Signal
 
 
-def auto_completer(in_text, in_state):
-    options = [i for i in Autocompleter().cmd_set if i.startswith(in_text)]
-    return options[in_state] if in_state < len(options) else None
+def auto_completer(text, state):
+    options = [i for i in Autocompleter().command_list if i.startswith(text)]
+    return options[state] if state < len(options) else None
 
 
 def main():
-    Signal().set_signal()
+    Signal().init_signal()
 
-    readline.parse_and_bind('tab: complete')
+    readline.parse_and_bind("tab: complete")
     readline.set_completer(auto_completer)
 
     io = IoControl()
-    io.print_hello_message()
+    io.print_welcome_message()
 
-    BasicNode()
+    RootNode()
 
     while True:
         user_input = io.get_input_command()
-        if len(user_input) == 0:    # Skip input 'enter' key.
+        if len(user_input) == 0:        # Skip input "enter" key.
             continue
 
         Parser().parse_user_input(user_input)
         Parser().set_auto_completer()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

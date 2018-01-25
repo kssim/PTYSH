@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
+Interface module when developing PTYSH module.
 """
 
 from data import Command
@@ -33,5 +34,5 @@ class PtyshModule(object):
     def command_set(self):
         return self._command_set
 
-    def add_command(self, in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working):
-        self._command_set.append(Command(in_cmd_name, in_cmd_desc, in_cmd_func, in_hidden_flag, in_working))
+    def add_command(self, command_name, command_desc, command_function, visible, workable):
+        self._command_set.append(Command(command_name, command_desc, command_function, visible, workable))

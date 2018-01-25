@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
+Modules related to structure used throughout PTYSH.
 """
 
 
@@ -14,13 +15,13 @@ class _Singleton(type):
         return cls._instances[cls]
 
 
-class Singleton(_Singleton('Singleton', (object,), {})): pass
+class Singleton(_Singleton("Singleton", (object,), {})): pass
 
 
 class Status(Singleton):
 
     ZERO_DEPTH = 0
-    CONF_DEPTH = 1
+    CONFIGURE_DEPTH = 1
 
     def __init__(self):
         self._login = False

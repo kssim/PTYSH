@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """
+This module parses the user's input and executes the command on the input.
 """
 
 from inout import IoControl
-from base import BasicNode
+from base import RootNode
 from base import Autocompleter
 from data import ModuleCommand
 from structure import Status
@@ -18,20 +19,32 @@ class Parser(Singleton):
         Compares the user's input with the stored command set and finds the command to process.
         Find the result by dividing the input value and command by spaces and comparing them.
         """
-        if Status().current_node != user_input and BasicNode().get_module_instance(user_input) is not None:
+        if Status().current_node != user_input and RootNode().get_module_instance(user_input) is not None:
             Status().increase_module_depth()
             Status().push_current_node(user_input)
             return
 
         splited_user_input = user_input.split(" ")
-        if not self.parse_command_set(splited_user_input, self.get_command_set()):
+        if not self.check_command_set(splited_user_input, self.get_command_set()):
             io = IoControl()
-            io.print_msg("This command(\"%s\") is not supported." % user_input)
+            io.print_message("This command(\"%s\") is not supported." % user_input)
 
-    def parse_command_set(self, splited_user_input, command_set):
+    def get_command_set(self):
+        """
+        Get the command set for the current node position.
+        """
+        if Status().module_depth == Status().ZERO_DEPTH:            # base node
+            return RootNode().command_set
+        elif Status().module_depth == Status().CONFIGURE_DEPTH:     # configure node
+            return RootNode().configure_node.command_set
+        else:                                                       # module node
+            instance = RootNode().get_module_instance(Status().current_node)
+            return instance.command_set
+
+    def check_command_set(self, splited_user_input, command_set):
         for command in command_set:
             if isinstance(command, ModuleCommand):
-                return self.parse_command_set(splited_user_input, command.command_set)
+                return self.check_command_set(splited_user_input, command.command_set)
 
             if self.parser(splited_user_input, command):
                 return True
@@ -49,18 +62,6 @@ class Parser(Singleton):
             command.handler()
             return True
         return False
-
-    def get_command_set(self):
-        """
-        Get the command set for the current node position.
-        """
-        if Status().module_depth == Status().ZERO_DEPTH:        # base node
-            return BasicNode().command_set
-        elif Status().module_depth == Status().CONF_DEPTH:      # configure node
-            return BasicNode().configure_terminal.command_set
-        else:                                                   # module node
-            instance = BasicNode().get_module_instance(Status().current_node)
-            return instance.command_set
 
     def set_auto_completer(self):
         """

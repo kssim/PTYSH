@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
+Modules that define utilities used by PTYSH.
 """
 
 import signal
@@ -12,24 +13,24 @@ from structure import Singleton
 
 class Signal(Singleton):
 
-    def empty_signal_handler(self, in_signal, in_frame):
+    def empty_signal_handler(self, signal, frame):
         return
 
-    def set_signal(self):
+    def init_signal(self):
         signal.signal(signal.SIGINT, self.empty_signal_handler)
         signal.signal(signal.SIGTSTP, self.empty_signal_handler)
 
 
 class Encryption(object):
 
-    _salt = 'IPOT_PTYSH'
-    _default_passwd = '5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146'    # Encrypted string 'ptysh'
+    _salt = "IPOT_PTYSH"
+    _default_passwd = "5b92b30b5d3e1a6f0dbe1824f4b7b1414bab66396ff0af3b2a329b40c8926146"    # Encrypted string "ptysh"
 
-    def encrypt_passwd(self, in_passwd):
-        return sha256(self._salt.encode() + in_passwd.encode()).hexdigest()
+    def encrypt_passwd(self, passwd):
+        return sha256(self._salt.encode() + passwd.encode()).hexdigest()
 
-    def validate_passwd(self, in_passwd):
-        return True if self._default_passwd == self.encrypt_passwd(in_passwd) else False
+    def check_passwd(self, passwd):
+        return True if self._default_passwd == self.encrypt_passwd(passwd) else False
 
 
 class LoadModule(object):
@@ -44,10 +45,7 @@ class LoadModule(object):
         Except that the extension is not "py" and the filename is "__init__".
         """
         file_name, file_extension = path.splitext(self.module_path)
-        if file_extension != ".py" or file_name == "__init__":
-            return ""
-
-        return file_name
+        return file_name if file_extension == ".py" and file_name != "__init__" else ""
 
     def get_instance(self):
         """
@@ -62,8 +60,8 @@ class LoadModule(object):
             self.instance = getattr(module, self.module_name, None)
         except Exception as e:
             io = IoControl()
-            io.print_msg("Module \"%s\" has something problem." % self.module_name)
-            io.print_msg(e)
+            io.print_message("Module \"%s\" has something problem." % self.module_name)
+            io.print_message(e)
             return None
 
         return self.instance()

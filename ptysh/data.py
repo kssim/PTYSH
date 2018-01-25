@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
+A module that describes the basic data structure of each node in the CLI.
 """
 
 from inout import IoControl
@@ -21,6 +22,7 @@ class ModuleCommand(object):
     def __init__(self, node_name, node_description, command_set):
         self.node_name = node_name
         self.node_description = node_description
+
         self.command_set = [
             Command("list", "command list", self.cmd_list, True, True),
             Command("exit", "exit", self.cmd_exit, True, True)
@@ -31,12 +33,11 @@ class ModuleCommand(object):
     ##### cmd function. #####
     def cmd_list(self):
         io = IoControl()
-
         for command in self.command_set:
             if isinstance(command, ModuleCommand):
-                io.print_list(command.node_name, command.node_description)
+                io.print_cmd_list(command.node_name, command.node_description)
             elif command.visible:
-                io.print_list(command.command, command.description)
+                io.print_cmd_list(command.command, command.description)
 
     def cmd_exit(self):
         Status().decrease_module_depth()

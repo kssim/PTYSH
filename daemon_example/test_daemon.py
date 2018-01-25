@@ -6,14 +6,14 @@ import dbus.service
 import gobject
 from dbus.mainloop.glib import DBusGMainLoop
 
-DBUS_BUS_NAME = 'com.kssim.test'
-DBUS_OBJECT_PATH = '/com/kssim/test'
-DBUS_INTERFACE = 'com.kssim.test.signal'
-DBUS_SIGNAL_NAME = 'daemon_test'
+DBUS_BUS_NAME = "com.kssim.test"
+DBUS_OBJECT_PATH = "/com/kssim/test"
+DBUS_INTERFACE = "com.kssim.test.signal"
+DBUS_SIGNAL_NAME = "daemon_test"
 
 class EventHandler(dbus.service.Object):
 
-    print_msg = 'Hello world'
+    print_msg = "Hello world"
 
     def __init__(self):
         bus = dbus.SystemBus()
@@ -24,7 +24,7 @@ class EventHandler(dbus.service.Object):
 
     @dbus.service.method(DBUS_BUS_NAME)
     def receive_signal(self, in_msg):
-        print ('I got the message(\'%s\')' % in_msg)
+        print ("I got the message(\"%s\")" % in_msg)
         self.print_msg = in_msg
         return True
 
@@ -33,7 +33,7 @@ class EventHandler(dbus.service.Object):
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     DBusGMainLoop(set_as_default=True)
 
     try:
@@ -43,5 +43,5 @@ if __name__ == '__main__':
         gobject.timeout_add_seconds(1, handler.repeat_print_msg)
         loop.run()
     except KeyboardInterrupt:
-        print ('Daemon exit.')
+        print ("Daemon exit.")
         GLib.MainLoop().quit()

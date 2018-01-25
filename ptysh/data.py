@@ -14,14 +14,16 @@ class Command(object):
     - command       : Command to use.
     - description   : Description of the command.
     - handler       : Functions to use when executing commands.
+    - usage         : Write a usage that will print out an invalid argument value
     - visible       : Whether to show commands in the list.
     - workable      : Whether the command is operational.
     """
 
-    def __init__(self, command, description, handler, visible=True, workable=True):
+    def __init__(self, command, description, handler, usage="", visible=True, workable=True):
         self.command = command
         self.description = description
         self.handler = handler
+        self.usage = usage
         self.visible = visible
         self.workable = workable
 
@@ -41,8 +43,8 @@ class ModuleCommand(object):
         self.node_description = node_description
 
         self.command_set = [
-            Command("list", "command list", self.cmd_list, True, True),
-            Command("exit", "exit", self.cmd_exit, True, True)
+            Command("list", "command list", self.cmd_list),
+            Command("exit", "exit", self.cmd_exit)
         ]
         self.command_set += command_set
 

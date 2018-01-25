@@ -46,14 +46,14 @@ class RootNode(Singleton):
 
     def __init__(self):
         self.command_set = [
-            Command("enable", "enable mode", self.cmd_enable, True, True),
-            Command("disable", "disable mode", self.cmd_disable, True, False),
-            Command("list", "command list", self.cmd_list, True, True),
-            Command("st", "start shell", self.cmd_st, False, True),
-            Command("show hostname", "show hostname", self.cmd_show_hostname, True, False),
-            Command("configure terminal", "configure terminal", self.cmd_configure_node, True, False),
-            Command("refresh", "refresh module list", self.cmd_refresh, True, False),
-            Command("exit", "exit", self.cmd_exit, True, True)
+            Command("enable", "enable mode", self.cmd_enable),
+            Command("disable", "disable mode", self.cmd_disable),
+            Command("list", "command list", self.cmd_list),
+            Command("st", "start shell", self.cmd_st, "", False, True),
+            Command("show hostname", "show hostname", self.cmd_show_hostname, "", True, False),
+            Command("configure terminal", "configure terminal", self.cmd_configure_node, "", True, False),
+            Command("refresh", "refresh module list", self.cmd_refresh, "", True, False),
+            Command("exit", "exit", self.cmd_exit)
         ]
         Autocompleter().init_command_set(self.command_set)
         self.cmd_refresh()

@@ -39,5 +39,5 @@ class PtyshModule(object):
     def command_set(self):
         return self._command_set
 
-    def add_command(self, command_name, command_desc, command_function, visible, workable):
-        self._command_set.append(Command(command_name, command_desc, command_function, visible, workable))
+    def add_command(self, command_name, command_desc, command_function, usage="", visible=True, workable=True):
+        self._command_set.append(Command(command_name, command_desc, command_function, usage, visible, workable))

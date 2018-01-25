@@ -43,8 +43,6 @@ class Autocompleter(Singleton):
 class RootNode(Singleton):
 
     def __init__(self):
-        self.io = IoControl()
-
         self.command_set = [
             Command("enable", "enable mode", self.cmd_enable, True, True),
             Command("disable", "disable mode", self.cmd_disable, True, False),
@@ -57,8 +55,8 @@ class RootNode(Singleton):
         ]
         Autocompleter().init_command_set(self.command_set)
 
-        self.configure_node = None
-        self.init_configure_node()
+        self.io = IoControl()
+        self.cmd_refresh()
 
     def switch_enable_mode(self, enabled):
         self.switch_enable_related_command("disable", enabled)
@@ -85,7 +83,7 @@ class RootNode(Singleton):
                 continue
 
             if self.get_module_instance(module.node_name) is not None:
-                self.io.print_message("Module \"%s\" is duplicated, so do not add it." % node_name)
+                self.io.print_message("Module \"%s\" is duplicated, so do not add it." % module.node_name)
                 continue
 
             module_command_set.append(ModuleCommand(module.node_name, module.node_description, module.command_set))
@@ -146,4 +144,5 @@ class RootNode(Singleton):
         exit(0)
 
     def cmd_refresh(self):
-        pass
+        self.configure_node = None
+        self.init_configure_node()

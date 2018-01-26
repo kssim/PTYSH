@@ -1,49 +1,53 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
 
-try:
-    with open('README.md') as f:
-        readme = f.read()
-except:
-    readme = ''
+packages = ["ptysh", "modules", "daemon_example"]
+
+requires = [
+    "python-config",
+    "dbus-python"
+]
+
+with open("README.md") as f:
+    readme = f.read()
+
+with open("VERSION") as f:
+    version = f.read()
 
 setup(
-    name='ptysh',
-    version='0.1.0',
-    packages=['modules', 'daemon_example'],
-    install_requires=['python-config', 'dbus-python'],
-    py_modules = [
-        'ptysh_main',
-        'ptysh_base',
-        'ptysh_util',
-        'ptysh_module',
-    ],
-
-    author='kssim',
-    author_email='ksub0912@gmail.com',
-    url='https://github.com/IPOT/PTYSH',
-    license='MIT License',
-
-    description='Python Teletype Shell',
-    long_description=readme,
-
-    keywords=['shell', 'tty', 'terminal'],
+    name = "ptysh",
+    version = version,
+    description = "Python Teletype Shell",
+    long_description = readme,
+    author = "kssim",
+    author_email = "ksub0912@gmail.com",
+    url = "https://github.com/kssim/PTYSH",
+    packages = packages,
+    packages_data = {},
+    package_dir = {},
+    include_package_data = True,
+    install_requires = requires,
+    setup_requires = [],
+    tests_require = [],
+    license = "MIT License",
+    zip_safe = False,
+    scripts = ["bin/ptysh"],
+    keywords=["shell", "cli", "tty", "terminal", "python cli", "python tty"],
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
-        'Operating System :: POSIX :: Linux',
-        'Topic :: Software Development',
-        'Topic :: System :: Installation/Setup',
-        'Topic :: System :: System Shells',
-        'Topic :: System :: Shells',
-        'Topic :: Terminals',
-        'Topic :: Utilities',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+        "Operating System :: POSIX :: Linux",
+        "Topic :: Software Development",
+        "Topic :: System :: Installation/Setup",
+        "Topic :: System :: System Shells",
+        "Topic :: System :: Shells",
+        "Topic :: Terminals",
+        "Topic :: Utilities",
     ],
 )

@@ -60,9 +60,8 @@ You can create additional logic inherit the class 'ptysh_module'.<br>
 
 ## Plan
 1. Fix the pip install configuration problem(libraries).
-2. Internal logic refactoring for scalability.
-3. Improved stability in various environments.
-4. Create wiki page and fix the readme file.
+2. Improved stability in various environments.
+3. Create wiki page and fix the readme file.
 
 
 

@@ -50,9 +50,9 @@ class RootNode(Singleton):
             Command("disable", "disable mode", self.cmd_disable),
             Command("list", "command list", self.cmd_list),
             Command("st", "start shell", self.cmd_st, "", False, True),
-            Command("show hostname", "show hostname", self.cmd_show_hostname, "", True, False),
-            Command("configure terminal", "configure terminal", self.cmd_configure_node, "", True, False),
-            Command("refresh", "refresh module list", self.cmd_refresh, "", True, False),
+            Command("show hostname", "show hostname", self.cmd_show_hostname),
+            Command("configure terminal", "configure terminal", self.cmd_configure_node),
+            Command("refresh", "refresh module list", self.cmd_refresh),
             Command("exit", "exit", self.cmd_exit)
         ]
         Autocompleter().init_command_set(self.command_set)

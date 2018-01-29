@@ -5,6 +5,7 @@ Main module for running ptysh.
 """
 
 import readline
+from optparse import OptionParser
 
 from inout import IoControl
 from base import RootNode
@@ -20,6 +21,18 @@ def auto_completer(text, state):
     options = [i for i in Autocompleter().command_list if i.startswith(text)]
     return options[state] if state < len(options) else None
 
+def command_line_parser():
+    option = OptionParser("Usage: %prog ")
+    option.add_option("-d", "--dir", dest="conf_dir", type="string", help="PTYSH configuration directory.")
+
+    (options, _) = option.parse_args()
+
+    if options.conf_dir is None:
+        return
+
+    Parser().parse_user_input("configure terminal")
+    # Do something
+    RootNode().switch_enable_mode(False)
 
 def main():
     Signal().init_signal()
@@ -29,6 +42,7 @@ def main():
 
     IoControl().print_welcome_message()
     RootNode()
+    command_line_parser()
 
     while True:
         user_input = IoControl().get_input_command()

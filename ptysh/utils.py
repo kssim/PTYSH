@@ -4,7 +4,9 @@
 Modules that define utilities used by PTYSH.
 """
 
+import sys
 import signal
+import importlib
 from os import path
 from hashlib import sha256
 
@@ -70,6 +72,7 @@ class LoadModule(object):
 
         try:
             module = __import__(self.module_name)
+            importlib.reload(module) if sys.version_info >= (3,0) else reload(module)
             self.instance = getattr(module, self.module_name, None)
         except Exception as e:
             IoControl().print_message("Module \"%s\" has something problem." % self.module_name)

@@ -25,6 +25,6 @@ class test_module(PtyshModule):
 
     def cmd_print_argument(self, arg):
         if len(arg):
-            print (arg)
+            print (" ".join([str(x) for x in arg]))
             return True
         return False

@@ -4,6 +4,11 @@
 Modules related to structure used throughout PTYSH.
 """
 
+from collections import OrderedDict
+
+from yaml import Loader
+from yaml import MappingNode
+
 
 class _Singleton(type):
 
@@ -60,3 +65,44 @@ class Status(Singleton):
 
     def pop_current_node(self):
         self._current_node.pop()
+
+
+class OrderedDictYAMLLoader(Loader):
+
+    """
+    When loading a YAML file, use OrderDedDictionary to maintain the order of the loaded settings.
+    PyYaml does not support OrderedDictionary, so I created a Loader to make OrderdedDictionary available.
+    This source code was referenced in the gist below.
+      - https://gist.github.com/enaeseth/844388
+    """
+
+    def __init__(self, *args, **kwargs):
+        Loader.__init__(self, *args, **kwargs)
+
+        self.add_constructor(u"tag:yaml.org,2002:map", type(self).construct_yaml_map)
+        self.add_constructor(u"tag:yaml.org,2002:omap", type(self).construct_yaml_map)
+
+    def construct_yaml_map(self, node):
+        data = OrderedDict()
+        yield data
+
+        value = self.construct_mapping(node)
+        if value is not None:
+            data.update(value)
+
+    def construct_mapping(self, node, deep=False):
+        if not isinstance(node, MappingNode):
+            return None
+
+        self.flatten_mapping(node)
+        mapping = OrderedDict()
+        for key_node, value_node in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            try:
+                hash(key)
+            except:
+                return None
+
+            value = self.construct_object(value_node, deep=deep)
+            mapping[key] = value
+        return mapping

@@ -1,0 +1,6 @@
+# YAML configuration file for loading module settings of PTYSH.
+node: hello
+
+commands:
+    argument:
+        - test

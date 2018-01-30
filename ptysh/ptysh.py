@@ -22,17 +22,18 @@ def auto_completer(text, state):
     return options[state] if state < len(options) else None
 
 def command_line_parser():
+    """
+    Functions for parsing PTYSH command options.
+    """
     option = OptionParser("Usage: %prog ")
-    option.add_option("-d", "--dir", dest="conf_dir", type="string", help="PTYSH configuration directory.")
+    option.add_option("-l", "--load", dest="load_conf", action="store_true", help="Load the registered module settings of PTYSH.")
 
     (options, _) = option.parse_args()
 
-    if options.conf_dir is None:
-        return
-
-    Parser().parse_user_input("configure terminal")
-    # Do something
-    RootNode().switch_enable_mode(False)
+    if options.load_conf:
+        conf_list = IoControl().get_modules_conf()
+        Parser().load_configuration(conf_list)
+        exit(0)
 
 def main():
     Signal().init_signal()
@@ -40,9 +41,11 @@ def main():
     readline.parse_and_bind("tab: complete")
     readline.set_completer(auto_completer)
 
-    IoControl().print_welcome_message()
     RootNode()
     command_line_parser()
+    RootNode().switch_enable_mode(False)
+
+    IoControl().print_welcome_message()
 
     while True:
         user_input = IoControl().get_input_command()

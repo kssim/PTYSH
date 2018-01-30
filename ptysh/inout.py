@@ -6,12 +6,15 @@ Module responsible for handling input and output in ptysh.
 
 import sys
 from os import path
+from os import listdir
+from yaml import load
 
 from structure import Status
 from structure import Singleton
+from structure import OrderedDictYAMLLoader
 
 HOST_NAME_FILE_PATH = "/etc/hostname"
-
+CONFIGURE_FILE_PATH = path.join(path.abspath(path.dirname(__file__)), "../ptysh.d/")
 
 class IoControl(Singleton):
 
@@ -58,3 +61,15 @@ class IoControl(Singleton):
 
     def print_message(self, message):
         print (message)
+
+    def get_modules_conf(self):
+        if not path.isdir(CONFIGURE_FILE_PATH):
+            return
+
+        conf_list = []
+        for conf_file in listdir(CONFIGURE_FILE_PATH):
+            file = ("%s%s" % (CONFIGURE_FILE_PATH, conf_file))
+            with open(file, "rb") as f:
+                conf_list.append(load(f, OrderedDictYAMLLoader))
+
+        return conf_list

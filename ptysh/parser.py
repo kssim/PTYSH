@@ -4,13 +4,14 @@
 This module parses the user's input and executes the command on the input.
 """
 
+from collections import OrderedDict
+
 from inout import IoControl
 from base import RootNode
 from base import Autocompleter
 from data import ModuleCommand
 from structure import Status
 from structure import Singleton
-
 
 class Parser(Singleton):
 
@@ -94,3 +95,24 @@ class Parser(Singleton):
             cmd_set.append(command.node_name if isinstance(command, ModuleCommand) else command)
 
         Autocompleter().init_command_set(cmd_set)
+
+    def load_configuration(self, conf_list):
+        self.parse_user_input("configure terminal")
+        self.parse_conf_list(conf_list)
+        self.parse_user_input("exit")
+
+    def parse_conf_list(self, conf_list):
+        for conf in conf_list:
+            self.parse_user_input(conf["node"])
+            self.parse_conf(conf["commands"])
+            self.parse_user_input("exit")
+
+    def parse_conf(self, command_set):
+        for command, arguments in command_set.items():
+            if isinstance(arguments[0], OrderedDict):
+                self.parse_user_input(command)
+                self.parse_conf(arguments[0])
+                self.parse_user_input("exit")
+            else:
+                cmd = ("%s %s" % (command, " ".join([str(x) for x in arguments])))
+                self.parse_user_input(cmd)

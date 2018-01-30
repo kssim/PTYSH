@@ -44,6 +44,7 @@ class ModuleCommand(object):
 
         self.command_set = [
             Command("list", "command list", self.cmd_list),
+            Command("?", "command list", self.cmd_list, "", False),
             Command("exit", "exit", self.cmd_exit)
         ]
         self.command_set += command_set

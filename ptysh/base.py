@@ -51,6 +51,7 @@ class RootNode(Singleton):
             Command("list", "command list", self.cmd_list),
             Command("?", "command list", self.cmd_list, "", False),
             Command("st", "start shell", self.cmd_st, "", False),
+            Command("debug", "start ptysh debug mode", self.cmd_debug, "", False),
             Command("show hostname", "show hostname", self.cmd_show_hostname),
             Command("configure terminal", "configure terminal", self.cmd_configure_node),
             Command("refresh", "refresh module list", self.cmd_refresh),
@@ -124,6 +125,7 @@ class RootNode(Singleton):
 
     def cmd_disable(self):
         Status().login = False
+        Status().debug = False
         self.switch_enable_mode(Status().login)
         IoControl().print_message("Enable mode has been deactivated.")
 
@@ -136,6 +138,9 @@ class RootNode(Singleton):
             call("/bin/bash")
         else:
             IoControl().print_message("Fail to enter the shell.")
+
+    def cmd_debug(self):
+        Status().debug = True
 
     def cmd_list(self):
         for cmd in self.command_set:
@@ -150,6 +155,7 @@ class RootNode(Singleton):
         Status().push_current_node("configure terminal")
 
     def cmd_exit(self):
+        Status().debug = False
         IoControl().print_message("Exit ptysh.")
         return self.EXIT_CODE
 

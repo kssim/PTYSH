@@ -37,6 +37,7 @@ class Status(Singleton):
         self._login = False
         self._module_depth = self.ROOT_DEPTH
         self._current_node = []
+        self._debug = False
 
     @property
     def login(self):
@@ -65,6 +66,14 @@ class Status(Singleton):
 
     def pop_current_node(self):
         self._current_node.pop()
+
+    @property
+    def debug(self):
+        return self._debug
+
+    @debug.setter
+    def debug(self, state):
+        self._debug = state
 
 
 class OrderedDictYAMLLoader(Loader):

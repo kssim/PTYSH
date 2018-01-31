@@ -74,9 +74,11 @@ class Parser(Singleton):
             try:
                 result = command.handler() if not argument_list else command.handler(argument_list)
             except Exception as e:
-                IoControl().print_message("Invalid command argument")
-                if command.usage:
-                    IoControl().print_message(command.usage)
+                msg = command.usage if command.usage else "Error"
+                IoControl().print_message(msg)
+
+                if Status().debug:
+                    IoControl().print_message(e)
                 return True
 
             if result == RootNode().EXIT_CODE:

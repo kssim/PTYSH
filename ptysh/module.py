@@ -65,10 +65,13 @@ class PtyshModule(object):
 
             bus_interface.receive_signal(data)
         except Exception as e:
-            IoControl().print_message("There was a problem sending the dbus message.")
-            IoControl().print_message("service name : %s, bus_object_path : %s, interface_name : %s"
+            if Status.debug:
+                IoControl().print_message("service name : %s, bus_object_path : %s, interface_name : %s"
                                         % (self.dbus_service_name, self.dbus_object_path, self.dbus_interface_name))
-            IoControl().print_message(e)
+                IoControl().print_message(e)
+            else:
+                IoControl().print_message("There was a problem sending the dbus message.")
+
             raise Exception
 
         return True

@@ -11,6 +11,7 @@ from os import path
 from hashlib import sha256
 
 from inout import IoControl
+from structure import Status
 from structure import Singleton
 
 class Signal(Singleton):
@@ -76,7 +77,8 @@ class LoadModule(object):
             self.instance = getattr(module, self.module_name, None)
         except Exception as e:
             IoControl().print_message("Module \"%s\" has something problem." % self.module_name)
-            IoControl().print_message(e)
+            if Status.debug:
+                IoControl().print_message(e)
             return None
 
         return self.instance()

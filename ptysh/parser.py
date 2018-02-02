@@ -13,6 +13,7 @@ from data import ModuleCommand
 from structure import Status
 from structure import Singleton
 
+
 class Parser(Singleton):
 
     def parse_user_input(self, user_input):
@@ -71,20 +72,23 @@ class Parser(Singleton):
             # Check that the commands except the argument match.
             # Then, check whether the command is workable.
             argument_list = splited_user_input[len(split_stored_command):]
+            result = None
             try:
                 result = command.handler() if not argument_list else command.handler(argument_list)
-            except Exception as e:
-                msg = command.usage if command.usage else "Error"
+            except TypeError as e:
+                msg = command.usage if command.usage else "The usage is wrong."
                 IoControl().print_message(msg)
-
+            except Exception as e:
+                IoControl().print_message("Fail")
                 if Status().debug:
                     IoControl().print_message(e)
-                return True
 
             if result == RootNode().EXIT_CODE:
                 exit(0)
 
-            return True if result or result is None else False
+            if result is not None and not result:
+                IoControl().print_message("Fail")
+            return True
 
         return False
 

@@ -78,6 +78,9 @@ class Parser(Singleton):
             except TypeError as e:
                 msg = command.usage if command.usage else "The usage is wrong."
                 IoControl().print_message(msg)
+
+                if Status().debug:
+                    IoControl().print_message(e)
             except ValueError as e:
                 IoControl().print_message(e)
             except Exception as e:

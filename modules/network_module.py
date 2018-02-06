@@ -87,9 +87,9 @@ class network_module(PtyshModule):
 
         index = self.get_link_index(args[0])
 
-        ip = args[1]
-        mask = args[2]
-        broadcast =  args[3] if len(args) >= 4 else ""
+        ip = str(args[1])
+        mask = int(args[2])
+        broadcast =  str(args[3]) if len(args) >= 4 else ""
         primary = args[4] if len(args) == 5 else True
 
         if primary:
@@ -104,14 +104,14 @@ class network_module(PtyshModule):
             raise Exception(ret)
 
     def cmd_route_add(self, args):
-        if len(args) < 4:
+        if len(args) < 3:
             raise TypeError()
 
-        dest = args[1]
-        src = args[2]
-        index = self.get_link_index(args[3])
+        dest = args[0]
+        src = args[1]
+        index = self.get_link_index(args[2])
 
-        dset_type = self.check_ip_address(dest)
+        dest_type = self.check_ip_address(dest)
         src_type = self.check_ip_address(src)
 
         if dest == "default" and src_type == self.IP:

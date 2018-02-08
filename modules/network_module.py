@@ -21,11 +21,10 @@ class network_module(PtyshModule):
         super(network_module, self).add_command("link up", "link up [link name]", self.cmd_link_up, "link up [link name]")
         super(network_module, self).add_command("link down", "link down [link name]", self.cmd_link_down, "link down [link name]")
 
-        super(network_module, self).add_command("link add", "add link ip", self.cmd_link_add, "link add [link name] [ip] [mask] ([broadcast] [primary])")
+        super(network_module, self).add_command("ip add", "add ip", self.cmd_ip_add, "link add [link name] [ip] [mask] ([broadcast] [primary])")
         super(network_module, self).add_command("route add", "add route", self.cmd_route_add, "route add [default|ip|ip/mask] [ip|none] [interface]")
 
-        super(network_module, self).add_command("show link", "show link [link name]", self.cmd_show_link, "show link [link name]")
-        super(network_module, self).add_command("show link names", "show link names", self.cmd_show_link, "show link name")
+        super(network_module, self).add_command("show link", "show link [link name|none]", self.cmd_show_link, "show link [link name|none]")
         super(network_module, self).add_command("show link all", "show link all", self.cmd_show_link, "show link all")
         super(network_module, self).add_command("show route", "show route", self.cmd_show_route, "show route")
 
@@ -62,6 +61,9 @@ class network_module(PtyshModule):
     def print_key_value(self, key, value):
         print ("%s : %s" % (key.ljust(25), value))
 
+    def print_ip_brief(self, interface, state, ip, ip_count):
+        print ("%s%s%s%s" % (interface.ljust(15), state.ljust(10), ip.ljust(27), ip_count.ljust(3)))
+
     def print_route_table(self, index, dest, gateway, mask, interface):
         print ("%s%s%s%s%s" % (index.ljust(8), dest.ljust(17), gateway.ljust(17), mask.ljust(8), interface))
 
@@ -81,7 +83,7 @@ class network_module(PtyshModule):
         if ret[0]["header"]["error"] is not None:
             raise Exception(ret[0]["header"]["error"])
 
-    def cmd_link_add(self, args):
+    def cmd_ip_add(self, args):
         if len(args) < 3:
             raise TypeError()
 
@@ -89,7 +91,7 @@ class network_module(PtyshModule):
 
         ip = str(args[1])
         mask = int(args[2])
-        broadcast =  str(args[3]) if len(args) >= 4 else ""
+        broadcast = str(args[3]) if len(args) >= 4 else ""
         primary = args[4] if len(args) == 5 else True
 
         if primary:
@@ -135,22 +137,26 @@ class network_module(PtyshModule):
         else:
             raise TypeError()
 
-    def cmd_show_link(self, args):
-        if len(args) != 1:
-            raise TypeError()
-
-        if args[0] == "names":
-            self.cmd_show_link_names()
+    def cmd_show_link(self, args=[]):
+        if len(args) == 0:
+            self.cmd_show_brief_info()
         elif args[0] == "all":
             for link in self.iproute.get_links():
                 self.cmd_show_link_info(link.get_attr("IFLA_IFNAME"))
         else:
             self.cmd_show_link_info(args[0])
 
-    def cmd_show_link_names(self):
+    def cmd_show_brief_info(self):
         self.print_output_boarder(True)
+        self.print_ip_brief("Interface", "State", "IP", "IP Count")
+        self.print_output_boarder(False)
+
         for link in self.iproute.get_links():
-            print (link.get_attr("IFLA_IFNAME"))
+            ip = self.iproute.get_addr(index=link["index"])
+            ip_address = "None" if len(ip) == 0 else ip[0].get_attr("IFA_ADDRESS")
+
+            self.print_ip_brief(link.get_attr("IFLA_IFNAME"), link.get_attr("IFLA_OPERSTATE"), ip_address, str(len(ip)))
+
         self.print_output_boarder(True)
 
     def cmd_show_link_info(self, link_name):

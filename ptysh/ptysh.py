@@ -40,6 +40,7 @@ def main():
 
     readline.parse_and_bind("tab: complete")
     readline.set_completer(auto_completer)
+    readline.set_completer_delims("")
 
     RootNode()
     command_line_parser()

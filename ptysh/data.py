@@ -44,7 +44,7 @@ class ModuleCommand(object):
 
         self.command_set = [
             Command("list", "command list", self.cmd_list),
-            Command("?", "command list", self.cmd_list, "", False),
+            Command("?", "command usage", self.cmd_usage, "", False),
             Command("exit", "exit", self.cmd_exit)
         ]
         self.command_set += command_set
@@ -57,6 +57,14 @@ class ModuleCommand(object):
                 IoControl().print_cmd_list(command.node_name, command.node_description)
             elif command.visible:
                 IoControl().print_cmd_list(command.command, command.description)
+
+    def cmd_usage(self):
+        for command in self.command_set:
+            if isinstance(command, ModuleCommand):
+                IoControl().print_cmd_usage(command.node_name)
+            elif command.visible and command.workable:
+                usage = command.usage if command.usage else command.command
+                IoControl().print_cmd_usage(usage)
 
     def cmd_exit(self):
         Status().decrease_module_depth()

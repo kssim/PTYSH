@@ -59,6 +59,9 @@ class IoControl(Singleton):
     def print_cmd_list(self, command, description):
         self.print_message("  %s%s" % (command.ljust(30), description))
 
+    def print_cmd_usage(self, usage):
+        self.print_message("  %s" % usage)
+
     def print_message(self, message):
         print (message)
 

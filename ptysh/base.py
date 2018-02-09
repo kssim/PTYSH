@@ -48,8 +48,8 @@ class RootNode(Singleton):
         self.command_set = [
             Command("enable", "enable mode", self.cmd_enable),
             Command("disable", "disable mode", self.cmd_disable),
-            Command("list", "command list", self.cmd_list),
-            Command("?", "command list", self.cmd_list, "", False),
+            Command("list", "command list & description", self.cmd_list),
+            Command("?", "command usage", self.cmd_usage, "", False),
             Command("st", "start shell", self.cmd_st, "", False),
             Command("debug", "start ptysh debug mode", self.cmd_debug, "", False),
             Command("show hostname", "show hostname", self.cmd_show_hostname),
@@ -146,6 +146,12 @@ class RootNode(Singleton):
         for cmd in self.command_set:
             if cmd.visible and cmd.workable:
                 IoControl().print_cmd_list(cmd.command, cmd.description)
+
+    def cmd_usage(self):
+        for cmd in self.command_set:
+            if cmd.visible and cmd.workable:
+                usage = cmd.usage if cmd.usage else cmd.command
+                IoControl().print_cmd_usage(usage)
 
     def cmd_show_hostname(self):
         IoControl().print_message(IoControl().get_host_name())

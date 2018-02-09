@@ -21,7 +21,7 @@ class network_module(PtyshModule):
         super(network_module, self).add_command("link up", "set link state up", self.cmd_link_up, "link up [link name]")
         super(network_module, self).add_command("link down", "set link state down", self.cmd_link_down, "link down [link name]")
 
-        super(network_module, self).add_command("ip add", "add ip address", self.cmd_ip_add, "link add [link name] [ip] [mask] ( [broadcast] [primary] )")
+        super(network_module, self).add_command("ip add", "add ip address", self.cmd_ip_add, "ip add [link name] [ip] [mask] ( [broadcast] [primary] )")
         super(network_module, self).add_command("route add", "add route address", self.cmd_route_add, "route add [default|ip|ip/mask] [ip|none] [interface]")
 
         super(network_module, self).add_command("show link", "show link state", self.cmd_show_link, "show link [link name|none]")
@@ -49,6 +49,13 @@ class network_module(PtyshModule):
             return self.IP_MASK
         return self.IP
 
+    def change_link_state(self, state):
+        index = self.get_link_index(args[0])
+        ret = self.iproute.link("set", index=index, state=state)
+
+        if ret[0]["header"]["error"] is not None:
+            raise Exception(ret[0]["header"]["error"])
+
     def print_output_boarder(self, inner):
         print ("=" * self.boarder_len) if inner else print ("-" * self.boarder_len)
 
@@ -61,8 +68,8 @@ class network_module(PtyshModule):
     def print_key_value(self, key, value):
         print ("%s : %s" % (key.ljust(25), value))
 
-    def print_ip_brief(self, interface, state, ip, ip_count):
-        print ("%s%s%s%s" % (interface.ljust(15), state.ljust(10), ip.ljust(27), ip_count.ljust(3)))
+    def print_ip_brief(self, idx, interface, state, ip):
+        print ("%s%s%s%s" % (idx.ljust(8), interface.ljust(15), state.ljust(10), ip.ljust(27)))
 
     def print_route_table(self, index, dest, gateway, mask, interface):
         print ("%s%s%s%s%s" % (index.ljust(8), dest.ljust(17), gateway.ljust(17), mask.ljust(8), interface))
@@ -70,18 +77,10 @@ class network_module(PtyshModule):
 
     ##### cmd function. #####
     def cmd_link_up(self, args):
-        index = self.get_link_index(args[0])
-        ret = self.iproute.link("set", index=index, state="up")
-
-        if ret[0]["header"]["error"] is not None:
-            raise Exception(ret[0]["header"]["error"])
+        self.change_link_state("up")
 
     def cmd_link_down(self, args):
-        index = self.get_link_index(args[0])
-        ret = self.iproute.link("set", index=index, state="down")
-
-        if ret[0]["header"]["error"] is not None:
-            raise Exception(ret[0]["header"]["error"])
+        self.change_link_state("down")
 
     def cmd_ip_add(self, args):
         if len(args) < 3:
@@ -148,14 +147,23 @@ class network_module(PtyshModule):
 
     def cmd_show_brief_info(self):
         self.print_output_boarder(True)
-        self.print_ip_brief("Interface", "State", "IP", "IP Count")
+        self.print_ip_brief("Index", "Interface", "State", "IP")
         self.print_output_boarder(False)
 
         for link in self.iproute.get_links():
-            ip = self.iproute.get_addr(index=link["index"])
-            ip_address = "None" if len(ip) == 0 else ip[0].get_attr("IFA_ADDRESS")
+            index = link["index"]
+            ip = self.iproute.get_addr(index=index)
 
-            self.print_ip_brief(link.get_attr("IFLA_IFNAME"), link.get_attr("IFLA_OPERSTATE"), ip_address, str(len(ip)))
+            if len(ip) == 0:
+                self.print_ip_brief(str(index), link.get_attr("IFLA_IFNAME"), link.get_attr("IFLA_OPERSTATE"), "None")
+                continue
+
+            for idx, address in enumerate(ip):
+                index_format = "%s.%s" % (index, idx)
+                interface = link.get_attr("IFLA_IFNAME") if idx == 0 else ""
+                state = link.get_attr("IFLA_OPERSTATE") if idx == 0 else ""
+
+                self.print_ip_brief(index_format, interface, state, address.get_attr("IFA_ADDRESS"))
 
         self.print_output_boarder(True)
 

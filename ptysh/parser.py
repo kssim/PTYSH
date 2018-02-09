@@ -72,9 +72,10 @@ class Parser(Singleton):
             # Check that the commands except the argument match.
             # Then, check whether the command is workable.
             argument_list = splited_user_input[len(split_stored_command):]
+            striped_argument_list = [x.strip() for x in argument_list if x.strip()]
             result = None
             try:
-                result = command.handler() if not argument_list else command.handler(argument_list)
+                result = command.handler() if not striped_argument_list else command.handler(striped_argument_list)
             except TypeError as e:
                 msg = command.usage if command.usage else "The usage is wrong."
                 IoControl().print_message(msg)

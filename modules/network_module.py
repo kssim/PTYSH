@@ -18,15 +18,15 @@ class network_module(PtyshModule):
     def __init__(self):
         super(network_module, self).__init__()
         super(network_module, self).init_node("network", "network node")
-        super(network_module, self).add_command("link up", "link up [link name]", self.cmd_link_up, "link up [link name]")
-        super(network_module, self).add_command("link down", "link down [link name]", self.cmd_link_down, "link down [link name]")
+        super(network_module, self).add_command("link up", "set link state up", self.cmd_link_up, "link up [link name]")
+        super(network_module, self).add_command("link down", "set link state down", self.cmd_link_down, "link down [link name]")
 
-        super(network_module, self).add_command("ip add", "add ip", self.cmd_ip_add, "link add [link name] [ip] [mask] ([broadcast] [primary])")
-        super(network_module, self).add_command("route add", "add route", self.cmd_route_add, "route add [default|ip|ip/mask] [ip|none] [interface]")
+        super(network_module, self).add_command("ip add", "add ip address", self.cmd_ip_add, "link add [link name] [ip] [mask] ( [broadcast] [primary] )")
+        super(network_module, self).add_command("route add", "add route address", self.cmd_route_add, "route add [default|ip|ip/mask] [ip|none] [interface]")
 
-        super(network_module, self).add_command("show link", "show link [link name|none]", self.cmd_show_link, "show link [link name|none]")
-        super(network_module, self).add_command("show link all", "show link all", self.cmd_show_link, "show link all")
-        super(network_module, self).add_command("show route", "show route", self.cmd_show_route, "show route")
+        super(network_module, self).add_command("show link", "show link state", self.cmd_show_link, "show link [link name|none]")
+        super(network_module, self).add_command("show link all", "show all link statue", self.cmd_show_link, "show link all")
+        super(network_module, self).add_command("show route", "show route state", self.cmd_show_route, "show route")
 
         self.iproute = IPRoute()
         self.boarder_len = 60

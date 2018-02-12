@@ -8,6 +8,7 @@ import dbus
 
 from data import Command
 from inout import IoControl
+from structure import Status
 
 class PtyshModule(object):
 
@@ -20,10 +21,6 @@ class PtyshModule(object):
         self._node_name = ""
         self._node_description = ""
         self._command_set = []
-
-        self.dbus_service_name = ""
-        self.dbus_object_path = ""
-        self.dbus_interface_name = ""
 
     @property
     def node_name(self):
@@ -44,34 +41,51 @@ class PtyshModule(object):
     def add_command(self, command_name, command_desc, command_function, usage="", visible=True, workable=True):
         self._command_set.append(Command(command_name, command_desc, command_function, usage, visible, workable))
 
-    def set_dbus_info(self, service_name, bus_object_path, interface_name):
-        if not service_name or not bus_object_path or not interface_name:
-            IoControl().print_message("Invalid dbus information")
-            return
+    def get_dbus(self, service_name, object_path):
+        return PtyshDbus(service_name, object_path)
 
-        self.dbus_service_name = service_name
-        self.dbus_object_path = bus_object_path
-        self.dbus_interface_name = interface_name
 
-    def dbus_handler(self, data):
-        if not self.dbus_service_name or not self.dbus_object_path or not self.dbus_interface_name:
-            IoControl().print_message("Invalid dbus information")
-            return False
+class PtyshDbus(object):
+
+    def __init__(self, service_name, object_path):
+        self.bus = None
+        self.bus_object = None
 
         try:
-            bus = dbus.SystemBus()
-            bus_object = bus.get_object(self.dbus_service_name, self.dbus_object_path)
-            bus_interface = dbus.Interface(bus_object, self.dbus_interface_name)
-
-            bus_interface.receive_signal(data)
+            self.bus = dbus.SystemBus()
+            self.bus_object = self.bus.get_object(service_name, object_path)
         except Exception as e:
-            if Status.debug:
-                IoControl().print_message("service name : %s, bus_object_path : %s, interface_name : %s"
-                                        % (self.dbus_service_name, self.dbus_object_path, self.dbus_interface_name))
-                IoControl().print_message(e)
+            self.dbus_exception_handler(e)
+
+    def dbus_exception_handler(self, exception):
+        if Status().debug:
+            IoControl().print_message(exception)
+        else:
+            IoControl().print_message("There was a problem sending the dbus message.")
+        raise Exception
+
+    def dbus_get_property(self, property_interface, property_name=None):
+        try:
+            properties = dbus.Interface(self.bus_object, "org.freedesktop.DBus.Properties")
+
+            if property_name:
+                result = properties.Get(property_interface, property_name)
             else:
-                IoControl().print_message("There was a problem sending the dbus message.")
+                result = properties.GetAll(property_interface)
+        except Exception as e:
+            self.dbus_exception_handler(e)
+        else:
+            return result
 
-            raise Exception
+    def dbus_method_call(self, method_name, method_interface, args=None):
+        try:
+            method = self.bus_object.get_dbus_method(method_name, method_interface)
 
-        return True
+            if args:
+                result = method(args)
+            else:
+                result = method()
+        except Exception as e:
+            self.dbus_exception_handler(e)
+        else:
+            return result

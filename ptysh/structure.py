@@ -4,6 +4,7 @@
 Modules related to structure used throughout PTYSH.
 """
 
+import dbus
 from collections import OrderedDict
 
 from yaml import Loader
@@ -74,6 +75,79 @@ class Status(Singleton):
     @debug.setter
     def debug(self, state):
         self._debug = state
+
+
+class PtyshDbus(object):
+
+    """
+    The wrapper class of dbus used in PTYSH.
+    DBus introspect, property, and method functions are implemented.
+    """
+
+    def __init__(self, service_name, object_path):
+        """
+        Initialize bus and object path.
+        """
+        self.bus = None
+        self.bus_object = None
+
+        try:
+            self.bus = dbus.SystemBus()
+            self.bus_object = self.bus.get_object(service_name, object_path)
+        except Exception as e:
+            self.dbus_exception_handler(e)
+
+    def dbus_introspect(self):
+        """
+        Show introspect information.
+        """
+        try:
+            iface = dbus.Interface(self.bus_object, dbus.INTROSPECTABLE_IFACE)
+            result = iface.Introspect()
+        except Exception as e:
+            self.dbus_exception_handler(e)
+        else:
+            return result
+
+    def dbus_get_property(self, property_interface, property_name=None):
+        """
+        Show property information.
+        If no property name is given, it shows all available properties.
+        """
+        try:
+            properties = dbus.Interface(self.bus_object, dbus.PROPERTIES_IFACE)
+
+            if property_name:
+                result = properties.Get(property_interface, property_name)
+            else:
+                result = properties.GetAll(property_interface)
+        except Exception as e:
+            self.dbus_exception_handler(e)
+        else:
+            return result
+
+    def dbus_method_call(self, method_name, method_interface, *args):
+        """
+        Show or set the result of method call.
+        """
+        try:
+            method = self.bus_object.get_dbus_method(method_name, method_interface)
+
+            if args:
+                result = method(*args)
+            else:
+                result = method()
+        except Exception as e:
+            self.dbus_exception_handler(e)
+        else:
+            return result
+
+    def dbus_exception_handler(self, exception):
+        if Status().debug:
+            IoControl().print_message(exception)
+        else:
+            IoControl().print_message("There was a problem sending the dbus message.")
+        raise Exception
 
 
 class OrderedDictYAMLLoader(Loader):

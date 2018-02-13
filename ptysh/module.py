@@ -4,11 +4,10 @@
 Interface module when developing PTYSH module.
 """
 
-import dbus
-
 from data import Command
 from inout import IoControl
 from structure import Status
+from structure import PtyshDbus
 
 class PtyshModule(object):
 
@@ -45,47 +44,4 @@ class PtyshModule(object):
         return PtyshDbus(service_name, object_path)
 
 
-class PtyshDbus(object):
 
-    def __init__(self, service_name, object_path):
-        self.bus = None
-        self.bus_object = None
-
-        try:
-            self.bus = dbus.SystemBus()
-            self.bus_object = self.bus.get_object(service_name, object_path)
-        except Exception as e:
-            self.dbus_exception_handler(e)
-
-    def dbus_exception_handler(self, exception):
-        if Status().debug:
-            IoControl().print_message(exception)
-        else:
-            IoControl().print_message("There was a problem sending the dbus message.")
-        raise Exception
-
-    def dbus_get_property(self, property_interface, property_name=None):
-        try:
-            properties = dbus.Interface(self.bus_object, "org.freedesktop.DBus.Properties")
-
-            if property_name:
-                result = properties.Get(property_interface, property_name)
-            else:
-                result = properties.GetAll(property_interface)
-        except Exception as e:
-            self.dbus_exception_handler(e)
-        else:
-            return result
-
-    def dbus_method_call(self, method_name, method_interface, args=None):
-        try:
-            method = self.bus_object.get_dbus_method(method_name, method_interface)
-
-            if args:
-                result = method(args)
-            else:
-                result = method()
-        except Exception as e:
-            self.dbus_exception_handler(e)
-        else:
-            return result
